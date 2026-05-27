@@ -1,4 +1,7 @@
-\name{build_database}
+\name{klue_database}
+\alias{klue_database}
+\alias{klue_database_long}
+\alias{klue_database_wide}
 \alias{build_database}
 \alias{build_database_long}
 \alias{build_database_wide}
@@ -9,31 +12,34 @@
   availability filtering, per-attribute scaling, and balanced-panel
   enforcement.
 
+  \code{build_database}, \code{build_database_long} and
+  \code{build_database_wide} are deprecated aliases.
+
   Argument naming is homogenised across long and wide format: the same
   identifiers \code{attribute_cols}, \code{price_col}, \code{avail_col}
   are used in both, though their shape differs (scalar in long, vector
   of \eqn{J} column names in wide).
 }
 \usage{
-build_database(data, format = c("auto", "long", "wide"), \ldots)
+klue_database(data, format = c("auto", "long", "wide"), \ldots)
 
-build_database_long(data,
-                    id_col, task_col, alt_col, choice_col,
-                    attribute_cols, price_col,
-                    choice_format = c("indicator", "alt_index"),
-                    avail_col = NULL,
-                    scalings = NULL,
-                    price_scaling = 1,
-                    verbose = TRUE)
+klue_database_long(data,
+                   id_col, task_col, alt_col, choice_col,
+                   attribute_cols, price_col,
+                   choice_format = c("indicator", "alt_index"),
+                   avail_col = NULL,
+                   scalings = NULL,
+                   price_scaling = 1,
+                   verbose = TRUE)
 
-build_database_wide(data,
-                    id_col, task_col = NULL, choice_col,
-                    attribute_cols = NULL, price_col = NULL,
-                    avail_col = NULL,
-                    scalings = NULL,
-                    attributes = NULL, price = NULL,
-                    availability = NULL,
-                    verbose = TRUE)
+klue_database_wide(data,
+                   id_col, task_col = NULL, choice_col,
+                   attribute_cols = NULL, price_col = NULL,
+                   avail_col = NULL,
+                   scalings = NULL,
+                   attributes = NULL, price = NULL,
+                   availability = NULL,
+                   verbose = TRUE)
 }
 \arguments{
   \item{data}{A data frame or path to a CSV (or \code{.dat}) file.}
@@ -68,8 +74,8 @@ build_database_wide(data,
     format. Accepted silently for backward compatibility; please switch
     to the canonical names.}
   \item{verbose}{Print build progress, filter rates, and final dimensions.}
-  \item{\ldots}{Passed to \code{build_database_long} or
-    \code{build_database_wide}.}
+  \item{\ldots}{Passed to \code{klue_database_long} or
+    \code{klue_database_wide}.}
 }
 \value{
   A data frame with columns \code{ID}, \code{TASK}, \code{x1_1..xN_J},
@@ -80,7 +86,7 @@ build_database_wide(data,
 \examples{
 \dontrun{
 # Long format
-db <- build_database_long(
+db <- klue_database_long(
   data = "data.csv",
   id_col = "respondent_id", task_col = "task",
   alt_col = "alternative", choice_col = "chosen",
@@ -90,7 +96,7 @@ db <- build_database_long(
 )
 
 # Wide format
-db <- build_database_wide(
+db <- klue_database_wide(
   data = mydata,
   id_col = "ID", task_col = "task", choice_col = "choice",
   attribute_cols = list(
@@ -103,4 +109,4 @@ db <- build_database_wide(
 )
 }
 }
-\seealso{\code{\link{run_lcmnl_workflow}}}
+\seealso{\code{\link{klue}}}

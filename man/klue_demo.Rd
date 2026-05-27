@@ -16,7 +16,7 @@ klue_demo(full = FALSE, verbose = TRUE)
   \item{verbose}{Print progress lines and the final summary. Default \code{TRUE}.}
 }
 \value{
-  Invisibly, the same results list returned by \code{\link{run_lcmnl_workflow}}.
+  Invisibly, the same results list returned by \code{\link{klue}}.
 }
 \examples{
 \dontrun{
@@ -28,4 +28,4 @@ res$class_betas
 res$best_C
 }
 }
-\seealso{\code{\link{run_lcmnl_workflow}}}
+\seealso{\code{\link{klue}}}

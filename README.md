@@ -44,7 +44,7 @@ data layouts are supported:
 ```r
 library(klue)
 
-res <- run_lcmnl_workflow(
+res <- klue(
   data           = "my_data.csv",          # CSV path or data.frame
   id_col         = "respondent_id",        # who made the choice
   task_col       = "task",                 # which choice task
@@ -61,7 +61,7 @@ CSVs to `output/`, returns a results list invisibly.
 ### Wide format — one row per (respondent × task), attributes by alternative
 
 ```r
-res <- run_lcmnl_workflow(
+res <- klue(
   data           = my_data,
   format         = "wide",
   id_col         = "ID",
@@ -117,7 +117,7 @@ Three CSVs are written to `output/` by default (override with `output_dir`):
 | `output_dir = "results"` | Write CSVs somewhere other than `output/`. |
 | `write_csv = FALSE` | Return results in memory only. |
 
-Full reference: `?run_lcmnl_workflow`.
+Full reference: `?klue`. Old names (`run_lcmnl_workflow`, `build_database*`, `estimate_*`) are kept as silent aliases for backward compatibility.
 
 ---
 

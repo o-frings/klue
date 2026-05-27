@@ -5,10 +5,10 @@
 # LCMNL specification workflow developed in `R/simulation_study.R`. Wraps the
 # engine in two user-facing helpers:
 #
-#   build_database(...)         Long- or wide-format -> canonical wide format.
-#   run_lcmnl_workflow(...)     Loops C, runs MMNL, summarises, writes CSVs.
+#   klue_database(...)         Long- or wide-format -> canonical wide format.
+#   klue(...)     Loops C, runs MMNL, summarises, writes CSVs.
 #
-# The engine (make_dgp_config, estimate_lcmnl_multistart, estimate_mmnl) lives
+# The engine (klue_dgp, klue_lcmnl, klue_mmnl) lives
 # in simulation_study.R and is reused unchanged.
 #
 # Canonical wide database format (what the engine consumes):
@@ -18,7 +18,7 @@
 # alternative is the last one (no ASC).
 #
 # Availability note: the engine assumes every alternative is available in every
-# task. Both build_database helpers accept availability columns and filter the
+# task. Both klue_database helpers accept availability columns and filter the
 # panel to fully-available tasks (dropping tasks where any alt is unavailable).
 # The drop rate is reported. Partial-availability estimation is not supported.
 # =============================================================================
@@ -76,7 +76,7 @@
 
 
 # =============================================================================
-# build_database_long
+# klue_database_long
 # =============================================================================
 #
 # Long-format input: one row per (respondent, task, alternative).
@@ -104,7 +104,7 @@
 #   verbose         print progress and filter rates.
 # =============================================================================
 
-build_database_long <- function(data,
+klue_database_long <- function(data,
                                 id_col, task_col, alt_col, choice_col,
                                 attribute_cols, price_col,
                                 choice_format = c("indicator", "alt_index"),
@@ -247,7 +247,7 @@ build_database_long <- function(data,
 
 
 # =============================================================================
-# build_database_wide
+# klue_database_wide
 # =============================================================================
 #
 # Wide-format input: one row per (respondent, task), with attributes spread
@@ -280,7 +280,7 @@ build_database_long <- function(data,
 #   verbose         print progress and filter rates.
 # =============================================================================
 
-build_database_wide <- function(data,
+klue_database_wide <- function(data,
                                 id_col, task_col = NULL, choice_col,
                                 attribute_cols = NULL, price_col = NULL,
                                 avail_col = NULL,
@@ -437,15 +437,15 @@ build_database_wide <- function(data,
 
 
 # =============================================================================
-# build_database  (dispatcher)
+# klue_database  (dispatcher)
 # =============================================================================
 #
-# Dispatches to build_database_long or build_database_wide based on `format`.
+# Dispatches to klue_database_long or klue_database_wide based on `format`.
 # If `format = "auto"`, infers: if `attributes` is a named list -> "wide";
 # if `alt_col` is provided -> "long".
 # =============================================================================
 
-build_database <- function(data,
+klue_database <- function(data,
                           format = c("auto", "long", "wide"),
                           ...) {
   format <- match.arg(format)
@@ -463,29 +463,29 @@ build_database <- function(data,
     }
   }
   if (format == "long") {
-    do.call(build_database_long, c(list(data = data), args))
+    do.call(klue_database_long, c(list(data = data), args))
   } else {
-    do.call(build_database_wide, c(list(data = data), args))
+    do.call(klue_database_wide, c(list(data = data), args))
   }
 }
 
 
 # =============================================================================
-# run_lcmnl_workflow: "plug in data -> all results" entry point
+# klue: "plug in data -> all results" entry point
 # =============================================================================
 #
 # Three calling conventions:
 #
 # (1) Canonical database already built:
-#         run_lcmnl_workflow(database = db, C_cands = 1:6, ...)
+#         klue(database = db, C_cands = 1:6, ...)
 #
-# (2) Long format + column mapping (forwards to build_database_long):
-#         run_lcmnl_workflow(data = "x.csv", format = "long",
+# (2) Long format + column mapping (forwards to klue_database_long):
+#         klue(data = "x.csv", format = "long",
 #                            id_col, task_col, alt_col, choice_col,
 #                            attribute_cols, price_col, ...)
 #
-# (3) Wide format + column mapping (forwards to build_database_wide):
-#         run_lcmnl_workflow(data = df, format = "wide",
+# (3) Wide format + column mapping (forwards to klue_database_wide):
+#         klue(data = df, format = "wide",
 #                            id_col, choice_col, attributes, price, ...)
 #
 # Additional args
@@ -498,7 +498,7 @@ build_database <- function(data,
 #                   slower than the independent variant because the
 #                   number of free parameters scales as n_beta * (n_beta+1) / 2.
 #   mmnl_opts       Named list of tuning args forwarded to BOTH
-#                   estimate_mmnl and estimate_mmnl_corr (n_draws,
+#                   klue_mmnl and klue_mmnl_corr (n_draws,
 #                   n_cores, draws_type, estimation_routine, ...).
 #                   See klue_mmnl_defaults() for the active defaults.
 #   attr_labels     override display names in the betas CSV. Default: taken
@@ -512,7 +512,7 @@ build_database <- function(data,
 # summary, class_betas, comparison, best_C, best_lcmnl.
 # =============================================================================
 
-run_lcmnl_workflow <- function(database = NULL,
+klue <- function(database = NULL,
                                data = NULL,
                                format = c("auto", "long", "wide"),
                                C_cands = 1:6,
@@ -530,9 +530,9 @@ run_lcmnl_workflow <- function(database = NULL,
   if (is.null(database)) {
     if (is.null(data)) {
       stop("Provide either `database` (canonical wide format) or `data` plus ",
-           "the column-mapping arguments (build_database is called internally).")
+           "the column-mapping arguments (klue_database is called internally).")
     }
-    database <- build_database(data, format = format, verbose = verbose, ...)
+    database <- klue_database(data, format = format, verbose = verbose, ...)
   } else {
     if (!all(c("ID", "TASK", "CHOICE") %in% names(database))) {
       stop("`database` must contain columns ID, TASK, CHOICE (canonical wide format).")
@@ -550,7 +550,7 @@ run_lcmnl_workflow <- function(database = NULL,
       stop("Could not infer n_alternatives / n_generic from database columns.")
     }
   }
-  dgp <- make_dgp_config(n_generic = Ng, n_alternatives = J)
+  dgp <- klue_dgp(n_generic = Ng, n_alternatives = J)
 
   if (is.null(attr_labels)) {
     attr_labels <- attr(database, "attr_labels")
@@ -567,7 +567,7 @@ run_lcmnl_workflow <- function(database = NULL,
   for (cc in C_cands) {
     if (verbose) cat(sprintf("\n=== Estimating C = %d ===\n", cc))
     t0 <- Sys.time()
-    m <- estimate_lcmnl_multistart(database, cc, dgp = dgp)
+    m <- klue_lcmnl(database, cc, dgp = dgp)
     dt <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
     if (verbose) {
       cat(sprintf("  converged=%s  LL=%.2f  BIC=%.2f  AIC=%.2f  ICL=%.2f  ICL-BIC=%.2f  method=%s  time=%.1fs\n",
@@ -639,8 +639,8 @@ run_lcmnl_workflow <- function(database = NULL,
   mmnl_fit      <- NULL
   mmnl_corr_fit <- NULL
   comparison_df <- NULL
-  if (run_mmnl)      mmnl_fit      <- .fit_mmnl_flavour("independent normals", estimate_mmnl)
-  if (run_mmnl_corr) mmnl_corr_fit <- .fit_mmnl_flavour("correlated normals",  estimate_mmnl_corr)
+  if (run_mmnl)      mmnl_fit      <- .fit_mmnl_flavour("independent normals", klue_mmnl)
+  if (run_mmnl_corr) mmnl_corr_fit <- .fit_mmnl_flavour("correlated normals",  klue_mmnl_corr)
 
   if ((!is.null(mmnl_fit) || !is.null(mmnl_corr_fit)) && "1" %in% names(results)) {
     mnl <- results[["1"]]
@@ -745,9 +745,9 @@ run_lcmnl_workflow <- function(database = NULL,
 #   full     If FALSE (default), runs a fast slice: C = 1..2, no MMNL (~3 sec).
 #            If TRUE, runs the full workflow: C = 1..6 + MMNL benchmark
 #            (~30 sec, matches what a real analysis looks like).
-#   verbose  Pass-through to run_lcmnl_workflow. Default TRUE.
+#   verbose  Pass-through to klue. Default TRUE.
 #
-# Returns the same results list as run_lcmnl_workflow(), invisibly.
+# Returns the same results list as klue(), invisibly.
 # =============================================================================
 
 klue_demo <- function(full = FALSE, verbose = TRUE) {
@@ -767,7 +767,7 @@ klue_demo <- function(full = FALSE, verbose = TRUE) {
                 if (full) " + MMNL benchmark" else ""))
   }
 
-  run_lcmnl_workflow(
+  klue(
     data           = d,
     format         = "wide",
     id_col         = "ID", task_col = NULL, choice_col = "choice",
@@ -785,3 +785,12 @@ klue_demo <- function(full = FALSE, verbose = TRUE) {
     output_prefix  = "demo"
   )
 }
+
+# =============================================================================
+# Backward-compatibility aliases.
+# =============================================================================
+
+run_lcmnl_workflow  <- klue
+build_database      <- klue_database
+build_database_long <- klue_database_long
+build_database_wide <- klue_database_wide

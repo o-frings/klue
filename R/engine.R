@@ -35,7 +35,7 @@ N_CORES_LCMNL <- min(4L, max(1L, detectCores() - 2L))
 
 # DGP configuration: encapsulates problem dimensions so all functions can
 # work with variable numbers of attributes and alternatives.
-make_dgp_config <- function(n_generic = 4, n_alternatives = 3) {
+klue_dgp <- function(n_generic = 4, n_alternatives = 3) {
   n_beta <- n_generic + 1L         # generic attributes + price
   n_asc  <- n_alternatives - 1L    # ASCs (last alt = reference)
   npc    <- n_beta + n_asc         # parameters per class
@@ -53,7 +53,7 @@ make_dgp_config <- function(n_generic = 4, n_alternatives = 3) {
   )
 }
 
-DGP_DEFAULT <- make_dgp_config(4, 3)
+DGP_DEFAULT <- klue_dgp(4, 3)
 
 # Backward-compatible global (used where dgp config not yet threaded through)
 BETA_BAR <- DGP_DEFAULT$beta_bar
@@ -83,8 +83,8 @@ OUTPUT_DIR    <- "output"
 # =============================================================================
 # MMNL DEFAULTS
 # -----------------------------------------------------------------------------
-# All values below are overridable per-call (estimate_mmnl, estimate_mmnl_corr,
-# run_lcmnl_workflow via `mmnl_opts`) and via global options
+# All values below are overridable per-call (klue_mmnl, klue_mmnl_corr,
+# klue via `mmnl_opts`) and via global options
 # (`getOption("klue.mmnl.<name>")`). Call `klue_mmnl_defaults()` for the
 # active settings as a named list.
 # -----------------------------------------------------------------------------
@@ -112,8 +112,8 @@ SIGMA_PRICE_BOUNDS_MMNL   <- c(-3, 1)
 #' MMNL default settings
 #'
 #' Returns the active MMNL defaults as a named list. Values can be overridden
-#' per-call (arguments to \code{estimate_mmnl} / \code{estimate_mmnl_corr} /
-#' \code{run_lcmnl_workflow}) or globally via \code{options()} entries
+#' per-call (arguments to \code{klue_mmnl} / \code{klue_mmnl_corr} /
+#' \code{klue}) or globally via \code{options()} entries
 #' \code{klue.mmnl.n_draws}, \code{klue.mmnl.n_draws_stage1},
 #' \code{klue.mmnl.draws_type}, \code{klue.mmnl.estimation_routine},
 #' \code{klue.mmnl.n_cores}, \code{klue.mmnl.mu_price_bounds},
@@ -534,7 +534,7 @@ cleanup_apollo <- function() {
                   "compute_lc_posteriors",
                   "standardise_features",
                   "fit_cluster_mnls", "attr_col_names", "build_design_matrices",
-                  "make_dgp_config", "DGP_DEFAULT",
+                  "klue_dgp", "DGP_DEFAULT",
                   "get_kmeans_starts", "get_gmm_starts",
                   "get_hc_ward_starts", "get_hc_complete_starts",
                   "get_hc_average_starts", "get_pam_starts", "get_all_starts",
@@ -542,14 +542,14 @@ cleanup_apollo <- function() {
                   "make_apollo_lcPars", "make_apollo_probabilities_lc",
                   "generate_data", "generate_data_with_covariates",
                   "generate_data_defficient",
-                  "estimate_lcmnl", "estimate_lcmnl_multistart", "estimate_mmnl",
+                  "estimate_lcmnl", "klue_lcmnl", "klue_mmnl",
                   "compute_onehot_features", "get_all_starts_onehot",
                   "estimate_lcmnl_multistart_onehot", "run_initialisation_ablation",
                   "compute_ari", "compute_recovery",
                   "run_main_simulation", "summarise_main_results",
                   "run_mmnl_comparison", "run_convergence_ablation",
                   "run_sample_sensitivity", "run_correlated_mmnl_robustness",
-                  "estimate_mmnl_corr", ".run_apollo_mmnl_corr",
+                  "klue_mmnl_corr", ".run_apollo_mmnl_corr",
                   "run_unbalanced_analysis",
                   "run_design_comparison", "run_concomitant_analysis",
                   "run_unconditional_recovery", "run_clustering_comparison",
@@ -898,7 +898,7 @@ estimate_lcmnl <- function(database, C, start_betas = NULL, start_shares = NULL,
 
 # --- Multi-start MNL/LCMNL: for C=1 (MNL) a single run suffices;
 # --- for C>=2 (LCMNL) run from all 6 clustering methods, keep best LL ---
-estimate_lcmnl_multistart <- function(database, C, dgp = DGP_DEFAULT) {
+klue_lcmnl <- function(database, C, dgp = DGP_DEFAULT) {
   all_starts <- get_all_starts(database, C, dgp = dgp)
   N <- length(unique(database$ID))
 
@@ -1148,7 +1148,7 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
   )
 }
 
-estimate_mmnl <- function(database,
+klue_mmnl <- function(database,
                           n_draws            = NULL,
                           n_draws_stage1     = NULL,
                           draws_type         = NULL,
@@ -1409,7 +1409,7 @@ run_main_simulation <- function(true_K_values = c(1, 2, 3, 4, 5),
     icls <- rep(Inf, length(C_cands))
     models <- list()
     for (j in seq_along(C_cands)) {
-      m <- estimate_lcmnl_multistart(data$database, C_cands[j], dgp = dgp)
+      m <- klue_lcmnl(data$database, C_cands[j], dgp = dgp)
       models[[j]] <- m
       if (m$converged) { bics[j] <- m$BIC; aics[j] <- m$AIC; icls[j] <- m$ICL }
     }
@@ -1537,7 +1537,7 @@ run_mmnl_comparison <- function(n_cond = 80, n_draws = N_DRAWS_MMNL,
     mnl_bic <- Inf  # C=1 result, i.e. standard MNL
     best_lc_bic <- Inf; best_lc_C <- NA_integer_; best_lc_method <- NA_character_
     for (Cc in C_cands) {
-      m <- estimate_lcmnl_multistart(data$database, Cc, dgp = dgp)
+      m <- klue_lcmnl(data$database, Cc, dgp = dgp)
       if (m$converged) {
         if (Cc == 1L) mnl_bic <- m$BIC  # MNL = LCMNL with C=1
         if (Cc >= 2L && m$BIC < best_lc_bic) {
@@ -1569,7 +1569,7 @@ run_mmnl_comparison <- function(n_cond = 80, n_draws = N_DRAWS_MMNL,
     data <- generate_data(N_per_class = lr$npc, T_tasks = 20, true_K = lr$tK,
                           separation = lr$kap, heterogeneity = lr$sig, seed = lr$seed,
                           dgp = dgp)
-    mm <- estimate_mmnl(data$database, n_draws = n_draws, dgp = dgp)
+    mm <- klue_mmnl(data$database, n_draws = n_draws, dgp = dgp)
 
     if (is.finite(lr$mnl_bic) && mm$converged) {
       rmnl[i] <- lr$mnl_bic; rlc[i] <- lr$lc_bic; rmm[i] <- mm$BIC
@@ -1648,7 +1648,7 @@ run_convergence_ablation <- function(n_random = 50, n_cond = 40, verbose = TRUE,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
 
-    t1 <- system.time(cres <- estimate_lcmnl_multistart(data$database, tK, dgp = dgp))[3]
+    t1 <- system.time(cres <- klue_lcmnl(data$database, tK, dgp = dgp))[3]
 
     # Uninformed random starts: N(0,2) for attributes, -exp(N(0,1)) for price
     rLLs <- rep(-Inf, n_random)
@@ -1730,7 +1730,7 @@ run_initialisation_ablation <- function(n_random = 50, n_cond = 40,
 
     # Arm A: RP-contrast clustering (main workflow)
     rp_res <- tryCatch(
-      estimate_lcmnl_multistart(data$database, tK, dgp = dgp),
+      klue_lcmnl(data$database, tK, dgp = dgp),
       error = function(e) NULL
     )
     rp_LL <- if (!is.null(rp_res) && isTRUE(rp_res$converged)) rp_res$LL else -Inf
@@ -1826,7 +1826,7 @@ run_unbalanced_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
                           class_proportions = cfg$props, dgp = dgp)
     bics <- rep(Inf, 5)
     for (Cc in 1:5) {
-      m <- estimate_lcmnl_multistart(data$database, Cc, dgp = dgp)
+      m <- klue_lcmnl(data$database, Cc, dgp = dgp)
       if (m$converged) bics[Cc] <- m$BIC
     }
     list(ci = ci, correct = as.integer(which.min(bics) == 3))
@@ -1860,9 +1860,9 @@ run_design_comparison <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
                                    dgp = dgp)
     br <- rep(Inf, 5); bd <- rep(Inf, 5)
     for (Cc in 1:5) {
-      m <- estimate_lcmnl_multistart(dr$database, Cc, dgp = dgp)
+      m <- klue_lcmnl(dr$database, Cc, dgp = dgp)
       if (m$converged) br[Cc] <- m$BIC
-      m <- estimate_lcmnl_multistart(dd$database, Cc, dgp = dgp)
+      m <- klue_lcmnl(dd$database, Cc, dgp = dgp)
       if (m$converged) bd[Cc] <- m$BIC
     }
     list(r_ok = as.integer(which.min(br) == tK),
@@ -1894,11 +1894,11 @@ run_concomitant_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
     )
     bics <- rep(Inf, 5)
     for (Cc in 1:5) {
-      m <- estimate_lcmnl_multistart(data$database, Cc, dgp = dgp)
+      m <- klue_lcmnl(data$database, Cc, dgp = dgp)
       if (m$converged) bics[Cc] <- m$BIC
     }
     correct <- as.integer(which.min(bics) == tK)
-    mt <- estimate_lcmnl_multistart(data$database, tK, dgp = dgp)
+    mt <- klue_lcmnl(data$database, tK, dgp = dgp)
     ari_val <- NA
     if (mt$converged && tK > 1) {
       pred <- apply(mt$posteriors, 1, which.max)
@@ -1930,7 +1930,7 @@ run_unconditional_recovery <- function(n_cond = 80, verbose = TRUE,
     data <- generate_data(N_per_class = 150, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
-    m <- estimate_lcmnl_multistart(data$database, tK, dgp = dgp)
+    m <- klue_lcmnl(data$database, tK, dgp = dgp)
     if (m$converged && tK > 1) {
       r <- compute_recovery(data$true_betas, m$betas)
       pred <- apply(m$posteriors, 1, which.max)
@@ -2082,7 +2082,7 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
                           dgp = dgp)
     bics <- rep(Inf, 5)
     for (Cc in 1:5) {
-      m <- estimate_lcmnl_multistart(data$database, Cc, dgp = dgp)
+      m <- klue_lcmnl(data$database, Cc, dgp = dgp)
       if (m$converged) bics[Cc] <- m$BIC
     }
     list(Tv = Tv, Npc = Npc, correct = as.integer(which.min(bics) == tK))
@@ -2223,7 +2223,7 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   )
 }
 
-estimate_mmnl_corr <- function(database,
+klue_mmnl_corr <- function(database,
                                n_draws            = NULL,
                                n_draws_stage1     = NULL,
                                draws_type         = NULL,
@@ -2277,7 +2277,7 @@ estimate_mmnl_corr <- function(database,
                                 n_cores = n_cores))
   }
 
-  indep_fit <- estimate_mmnl(database,
+  indep_fit <- klue_mmnl(database,
                              n_draws            = n_draws_stage1,
                              n_draws_stage1     = 100L,
                              draws_type         = draws_type,
@@ -2370,7 +2370,7 @@ run_correlated_mmnl_robustness <- function(n_draws = N_DRAWS_MMNL, verbose = TRU
                           dgp = dgp)
     best_lc_bic <- Inf; best_lc_C <- NA_integer_
     for (Cc in 1:5) {
-      m <- estimate_lcmnl_multistart(data$database, Cc, dgp = dgp)
+      m <- klue_lcmnl(data$database, Cc, dgp = dgp)
       if (m$converged && m$BIC < best_lc_bic) {
         best_lc_bic <- m$BIC; best_lc_C <- Cc
       }
@@ -2396,8 +2396,8 @@ run_correlated_mmnl_robustness <- function(n_draws = N_DRAWS_MMNL, verbose = TRU
                           separation = lr$kap, heterogeneity = lr$sig, seed = lr$seed,
                           dgp = dgp)
 
-    mm_indep <- estimate_mmnl(data$database, n_draws = n_draws, dgp = dgp)
-    mm_corr  <- estimate_mmnl_corr(data$database, n_draws = n_draws, dgp = dgp)
+    mm_indep <- klue_mmnl(data$database, n_draws = n_draws, dgp = dgp)
+    mm_corr  <- klue_mmnl_corr(data$database, n_draws = n_draws, dgp = dgp)
 
     if (is.finite(lr$lc_bic) && mm_indep$converged && mm_corr$converged) {
       r_lc[i] <- lr$lc_bic; r_lc_C[i] <- lr$lc_C
@@ -2503,3 +2503,15 @@ run_full_study <- function(run_main = TRUE, run_mmnl = TRUE, run_supp = TRUE,
 
 # Package version: simulation auto-run block intentionally removed.
 # Users can call run_full_study() / run_main_simulation() directly if needed.
+
+# =============================================================================
+# Backward-compatibility aliases.
+# Old names map to the new canonical klue_* names; both are exported so
+# existing call sites continue to work unchanged. Slated for removal in a
+# future major release.
+# =============================================================================
+
+make_dgp_config           <- klue_dgp
+estimate_lcmnl_multistart <- klue_lcmnl
+estimate_mmnl             <- klue_mmnl
+estimate_mmnl_corr        <- klue_mmnl_corr
