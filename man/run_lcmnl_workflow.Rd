@@ -12,6 +12,7 @@ run_lcmnl_workflow(database = NULL,
                    format = c("auto", "long", "wide"),
                    C_cands = 1:6,
                    run_mmnl = TRUE,
+                   mmnl_opts = list(),
                    attr_labels = NULL,
                    output_prefix = "workflow",
                    output_dir = NULL,
@@ -32,6 +33,12 @@ run_lcmnl_workflow(database = NULL,
     \code{1:6}. \code{C = 1} is the MNL baseline.}
   \item{run_mmnl}{If \code{TRUE}, also estimates an MMNL benchmark with
     independent normal random coefficients (log-normal on price).}
+  \item{mmnl_opts}{Named list of arguments forwarded to
+    \code{\link{estimate_mmnl}}. Use this to override defaults for
+    \code{n_draws}, \code{n_draws_stage1}, \code{draws_type},
+    \code{estimation_routine}, \code{n_cores}, \code{quiet},
+    \code{mu_price_bounds}, or \code{sigma_price_bounds}. See
+    \code{\link{klue_mmnl_defaults}} for the active defaults.}
   \item{attr_labels}{Override display column names in the betas CSV.}
   \item{output_prefix}{Filename prefix for the written CSVs.}
   \item{output_dir}{Output directory. Default: \code{getOption("klue.output_dir", "output")}.}

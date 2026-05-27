@@ -488,6 +488,7 @@ run_lcmnl_workflow <- function(database = NULL,
                                format = c("auto", "long", "wide"),
                                C_cands = 1:6,
                                run_mmnl = TRUE,
+                               mmnl_opts = list(),
                                attr_labels = NULL,
                                output_prefix = "workflow",
                                output_dir = NULL,
@@ -577,7 +578,9 @@ run_lcmnl_workflow <- function(database = NULL,
   if (run_mmnl) {
     if (verbose) cat("\n=== Estimating MMNL (independent normals) ===\n")
     t0 <- Sys.time()
-    mmnl_fit <- tryCatch(estimate_mmnl(database, dgp = dgp),
+    if (!is.list(mmnl_opts)) stop("`mmnl_opts` must be a named list.")
+    mmnl_call_args <- c(list(database = database, dgp = dgp), mmnl_opts)
+    mmnl_fit <- tryCatch(do.call(estimate_mmnl, mmnl_call_args),
                          error = function(e) {
                            if (verbose) cat("  MMNL failed:", conditionMessage(e), "\n")
                            NULL
@@ -587,6 +590,18 @@ run_lcmnl_workflow <- function(database = NULL,
       cat(sprintf("  converged=%s  LL=%.2f  BIC=%.2f  AIC=%.2f  k=%d  time=%.1fs\n",
                   mmnl_fit$converged, mmnl_fit$LL, mmnl_fit$BIC,
                   mmnl_fit$AIC, mmnl_fit$k, dt))
+      if (!isTRUE(mmnl_fit$converged)) {
+        reason <- if (is.null(mmnl_fit$reason)) "unknown" else mmnl_fit$reason
+        cat(sprintf("  MMNL did not converge (reason: %s)\n", reason))
+        if (!is.null(mmnl_fit$apollo_log_tail)) {
+          cat("  Last lines of the Apollo log:\n")
+          cat(paste0("    ", mmnl_fit$apollo_log_tail), sep = "\n")
+          cat("\n")
+        }
+        if (!is.null(mmnl_fit$apollo_log_path)) {
+          cat(sprintf("  Full Apollo log: %s\n", mmnl_fit$apollo_log_path))
+        }
+      }
     }
     if (!is.null(mmnl_fit) && "1" %in% names(results)) {
       mnl <- results[["1"]]
