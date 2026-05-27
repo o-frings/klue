@@ -655,7 +655,7 @@ run_lcmnl_workflow <- function(database = NULL,
       cat("\n--- Please cite klue and the packages it builds on ---\n")
       cat("  Frings (2026). A Hybrid Machine Learning and Random Utility\n")
       cat("    Framework for Latent Class Model Specification.\n")
-      cat("    Journal of Choice Modelling.\n")
+      cat("    Working paper.\n")
       cat("  Hess & Palma (2019). Apollo. J. Choice Modelling, 32, 100170.\n")
       cat("  Scrucca et al. (2016). mclust 5. The R Journal, 8(1), 289-317.\n")
       cat("  Maechler et al. (2024). cluster: Cluster Analysis Basics and Extensions.\n")

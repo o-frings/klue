@@ -15,7 +15,8 @@ Description: A reusable workflow for specifying latent class multinomial
     class-specific coefficients. Accepts arbitrary discrete-choice datasets
     in long or wide format with optional availability columns.
     Implements the workflow described in Frings (2026), "A Hybrid Machine
-    Learning and Random Utility Framework for Latent Class Model Specification."
+    Learning and Random Utility Framework for Latent Class Model
+    Specification" (working paper).
 License: MIT + file LICENSE
 URL: https://github.com/o-frings/klue
 BugReports: https://github.com/o-frings/klue/issues

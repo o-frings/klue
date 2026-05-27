@@ -4,17 +4,16 @@ citHeader(
 
 c(
   bibentry(
-    bibtype  = "Article",
+    bibtype  = "Unpublished",
     title    = "A Hybrid Machine Learning and Random Utility Framework for Latent Class Model Specification",
     author   = person("Oliver", "Frings"),
-    journal  = "Journal of Choice Modelling",
     year     = 2026,
-    note     = "R package klue, version 0.1.0",
+    note     = "Working paper. R package klue, version 0.2.0.",
     textVersion =
       paste("Frings, O. (2026).",
             "A Hybrid Machine Learning and Random Utility Framework for",
             "Latent Class Model Specification.",
-            "Journal of Choice Modelling.")
+            "Working paper.")
   ),
   bibentry(
     bibtype  = "Article",

@@ -136,7 +136,7 @@ If you use klue in published work, please cite the klue paper **and** the
 packages it builds on:
 
 - Frings, O. (2026). *A Hybrid Machine Learning and Random Utility Framework
-  for Latent Class Model Specification*. Journal of Choice Modelling.
+  for Latent Class Model Specification*. Working paper.
 - Hess, S., & Palma, D. (2019). *Apollo: a flexible, powerful and
   customisable freeware package for choice model estimation and
   application*. Journal of Choice Modelling, 32, 100170.
