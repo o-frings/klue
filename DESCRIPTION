@@ -1,0 +1,35 @@
+Package: klue
+Type: Package
+Title: A Hybrid ML and Random-Utility Workflow for LCMNL Specification
+Version: 0.1.0
+Authors@R: person("Oliver", "Frings",
+                  email = "oliver.frings@agroparistech.fr",
+                  role = c("aut", "cre"))
+Author: Oliver Frings [aut, cre]
+Maintainer: Oliver Frings <oliver.frings@agroparistech.fr>
+Description: A reusable workflow for specifying latent class multinomial
+    logit (LCMNL) models. Initialises the LCMNL multi-start from clusterings
+    of respondents' revealed-preference signatures (kmeans, GMM, hierarchical,
+    PAM), estimates LCMNL for a range of class counts, compares against an
+    MMNL benchmark, and returns BIC / AIC / ICL / entropy summaries plus
+    class-specific coefficients. Accepts arbitrary discrete-choice datasets
+    in long or wide format with optional availability columns.
+    Implements the workflow described in Frings (2026), "A Hybrid Machine
+    Learning and Random Utility Framework for Latent Class Model Specification."
+License: MIT + file LICENSE
+URL: https://github.com/o-frings/klue
+BugReports: https://github.com/o-frings/klue/issues
+Encoding: UTF-8
+LazyData: false
+Depends:
+    R (>= 3.6.0)
+Imports:
+    apollo (>= 0.3.0),
+    mclust,
+    cluster,
+    stats,
+    utils
+Suggests:
+    mlogit,
+    testthat
+RoxygenNote: 7.3.0
