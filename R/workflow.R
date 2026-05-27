@@ -660,3 +660,57 @@ run_lcmnl_workflow <- function(database = NULL,
     best_lcmnl  = best
   ))
 }
+
+
+# =============================================================================
+# klue_demo: zero-setup demonstration
+# =============================================================================
+#
+# Runs the workflow end-to-end on Apollo's bundled Swiss route-choice dataset
+# (the smallest reference dataset) so users can see the output shape without
+# having to wire their own data. Useful for first-time exploration.
+#
+# Args
+#   full     If FALSE (default), runs a fast slice: C = 1..2, no MMNL (~3 sec).
+#            If TRUE, runs the full workflow: C = 1..6 + MMNL benchmark
+#            (~30 sec, matches what a real analysis looks like).
+#   verbose  Pass-through to run_lcmnl_workflow. Default TRUE.
+#
+# Returns the same results list as run_lcmnl_workflow(), invisibly.
+# =============================================================================
+
+klue_demo <- function(full = FALSE, verbose = TRUE) {
+  if (!requireNamespace("apollo", quietly = TRUE)) {
+    stop("klue_demo() needs the apollo package installed.")
+  }
+  data_env <- new.env()
+  utils::data("apollo_swissRouteChoiceData", package = "apollo", envir = data_env)
+  d <- data_env$apollo_swissRouteChoiceData
+
+  if (verbose) {
+    cat("klue_demo: Swiss route choice (Apollo example data).\n")
+    cat("  348 commuters x 9 binary route comparisons (after balanced-panel filter).\n")
+    cat("  3 attributes (travel time, headway, # changes) + travel cost.\n")
+    cat(sprintf("  Estimating LCMNL for C = 1..%d%s.\n\n",
+                if (full) 6 else 2,
+                if (full) " + MMNL benchmark" else ""))
+  }
+
+  run_lcmnl_workflow(
+    data       = d,
+    format     = "wide",
+    id_col     = "ID", task_col = NULL, choice_col = "choice",
+    attributes = list(
+      travel_time = c("tt1", "tt2"),
+      headway     = c("hw1", "hw2"),
+      changes     = c("ch1", "ch2")
+    ),
+    price      = c("tc1", "tc2"),
+    scalings   = list(travel_time = 60, headway = 60, price = 10),
+    C_cands    = if (full) 1:6 else 1:2,
+    run_mmnl   = full,
+    write_csv  = FALSE,
+    verbose    = verbose,
+    output_prefix = "demo"
+  )
+}

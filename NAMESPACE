@@ -4,6 +4,7 @@ export(build_database)
 export(build_database_long)
 export(build_database_wide)
 export(run_lcmnl_workflow)
+export(klue_demo)
 
 # Engine functions are intentionally exported for power users.
 export(make_dgp_config)
