@@ -1,4 +1,6 @@
-citHeader("To cite klue in publications, please cite both the klue paper and Apollo (the underlying estimator):")
+citHeader(
+  "To cite klue in publications, please cite the klue paper and the underlying packages it builds on (Apollo for estimation; mclust and cluster for two of the six clustering-based starting values):"
+)
 
 c(
   bibentry(
@@ -28,5 +30,35 @@ c(
             "Apollo: a flexible, powerful and customisable freeware package",
             "for choice model estimation and application.",
             "Journal of Choice Modelling, 32, 100170.")
+  ),
+  bibentry(
+    bibtype  = "Article",
+    title    = "mclust 5: clustering, classification and density estimation using Gaussian finite mixture models",
+    author   = c(person("Luca", "Scrucca"), person("Michael", "Fop"),
+                 person(c("T.", "Brendan"), "Murphy"),
+                 person(c("Adrian", "E."), "Raftery")),
+    journal  = "The R Journal",
+    year     = 2016,
+    volume   = 8,
+    number   = 1,
+    pages    = "289-317",
+    doi      = "10.32614/RJ-2016-021",
+    textVersion =
+      paste("Scrucca, L., Fop, M., Murphy, T.B., & Raftery, A.E. (2016).",
+            "mclust 5: clustering, classification and density estimation",
+            "using Gaussian finite mixture models.",
+            "The R Journal, 8(1), 289-317.")
+  ),
+  bibentry(
+    bibtype  = "Manual",
+    title    = "cluster: Cluster Analysis Basics and Extensions",
+    author   = c(person("Martin", "Maechler"), person("Peter", "Rousseeuw"),
+                 person("Anja", "Struyf"), person("Mia", "Hubert"),
+                 person("Kurt", "Hornik")),
+    year     = 2024,
+    note     = "R package",
+    textVersion =
+      paste("Maechler, M., Rousseeuw, P., Struyf, A., Hubert, M., Hornik, K. (2024).",
+            "cluster: Cluster Analysis Basics and Extensions. R package.")
   )
 )

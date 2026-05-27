@@ -117,8 +117,8 @@ adapters. See `R/test_klue.R` in the source tree for the test.
 
 ## Citing
 
-If you use klue in published work, please cite **both** the klue paper and
-Apollo (the underlying maximum-likelihood estimator):
+If you use klue in published work, please cite the klue paper **and** the
+packages it builds on:
 
 - Frings, O. (2026). *A Hybrid Machine Learning and Random Utility Framework
   for Latent Class Model Specification*. Journal of Choice Modelling.
@@ -126,14 +126,23 @@ Apollo (the underlying maximum-likelihood estimator):
   customisable freeware package for choice model estimation and
   application*. Journal of Choice Modelling, 32, 100170.
   [doi:10.1016/j.jocm.2019.100170](https://doi.org/10.1016/j.jocm.2019.100170)
+- Scrucca, L., Fop, M., Murphy, T.B., & Raftery, A.E. (2016). *mclust 5:
+  clustering, classification and density estimation using Gaussian finite
+  mixture models*. The R Journal, 8(1), 289-317.
+  [doi:10.32614/RJ-2016-021](https://doi.org/10.32614/RJ-2016-021)
+- Maechler, M., Rousseeuw, P., Struyf, A., Hubert, M., Hornik, K. (2024).
+  *cluster: Cluster Analysis Basics and Extensions*. R package.
 
 ```r
-citation("klue")    # returns both BibTeX entries
+citation("klue")    # returns all four BibTeX entries
 ```
 
 ## Acknowledgements
 
 klue wraps the [Apollo](http://www.ApolloChoiceModelling.com/) choice-model
-estimation engine (Hess & Palma 2019). The hybrid workflow, clustering-based
-initialisation, and diagnostics layer are this package's contribution; the
-underlying LCMNL and MMNL maximum-likelihood machinery is Apollo's.
+estimation engine (Hess & Palma 2019); two of the six starting-value
+clusterings come from [mclust](https://mclust-org.github.io/mclust/)
+(Scrucca et al. 2016, GMM) and [cluster](https://cran.r-project.org/package=cluster)
+(Maechler et al., PAM). The hybrid workflow and the diagnostics layer are
+klue's contribution; the underlying MLE machinery and the clustering
+algorithms are not.
