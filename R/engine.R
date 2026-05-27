@@ -1098,9 +1098,16 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
   )
 
   apollo_randCoeff <<- .make_apollo_randCoeff(dgp)
+  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
 
   if (exists("apollo_lcPars", envir = .GlobalEnv)) rm("apollo_lcPars", envir = .GlobalEnv)
 
+  # NOTE: apollo_probabilities is set *before* apollo_validateInputs because
+  # validateInputs runs an internal pre-processing check that inspects the
+  # current apollo_probabilities in globalenv. If it isn't set yet, Apollo
+  # emits "WARNING: The pre-processing of 'apollo_probabilities' failed in
+  # initial testing." and the subsequent apollo_estimate call fails for
+  # certain (J, n_generic) combinations.
   apollo_inputs <<- tryCatch(
     apollo_validateInputs(
       apollo_beta    = apollo_beta,
@@ -1108,11 +1115,13 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
       database       = database,
       apollo_control = apollo_control
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl: apollo_validateInputs error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
   if (is.null(apollo_inputs)) return(NULL)
-
-  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
 
   est_settings <- list(
     estimationRoutine = estimation_routine,
@@ -1131,7 +1140,11 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
       apollo_inputs        = apollo_inputs,
       estimate_settings    = est_settings
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl: apollo_estimate error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
 }
 
@@ -1165,9 +1178,15 @@ estimate_mmnl <- function(database,
   # on exit — its path is returned with the fail result so users can inspect.
   log_file <- tempfile(pattern = "klue_mmnl_", fileext = ".log")
   if (isTRUE(quiet)) {
-    old_sink <- sink.number(); sink(log_file)
+    old_sink_out <- sink.number()
+    old_sink_msg <- sink.number(type = "message")
+    msg_con <- file(log_file, open = "at")
+    sink(log_file)
+    sink(msg_con, type = "message")
     on.exit({
-      while (sink.number() > old_sink) sink()
+      while (sink.number() > old_sink_out) sink()
+      while (sink.number(type = "message") > old_sink_msg) sink(type = "message")
+      try(close(msg_con), silent = TRUE)
       cleanup_apollo()
     }, add = TRUE)
   } else {
@@ -2158,9 +2177,12 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   )
 
   apollo_randCoeff <<- .make_apollo_randCoeff_corr(dgp)
+  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
 
   if (exists("apollo_lcPars", envir = .GlobalEnv)) rm("apollo_lcPars", envir = .GlobalEnv)
 
+  # See note in .run_apollo_mmnl: apollo_probabilities must be set before
+  # apollo_validateInputs.
   apollo_inputs <<- tryCatch(
     apollo_validateInputs(
       apollo_beta    = apollo_beta,
@@ -2168,11 +2190,13 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
       database       = database,
       apollo_control = apollo_control
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl_corr: apollo_validateInputs error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
   if (is.null(apollo_inputs)) return(NULL)
-
-  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
 
   est_settings <- list(
     estimationRoutine = estimation_routine,
@@ -2191,7 +2215,11 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
       apollo_inputs        = apollo_inputs,
       estimate_settings    = est_settings
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl_corr: apollo_estimate error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
 }
 
@@ -2215,9 +2243,15 @@ estimate_mmnl_corr <- function(database,
 
   log_file <- tempfile(pattern = "klue_mmnl_corr_", fileext = ".log")
   if (isTRUE(quiet)) {
-    old_sink <- sink.number(); sink(log_file)
+    old_sink_out <- sink.number()
+    old_sink_msg <- sink.number(type = "message")
+    msg_con <- file(log_file, open = "at")
+    sink(log_file)
+    sink(msg_con, type = "message")
     on.exit({
-      while (sink.number() > old_sink) sink()
+      while (sink.number() > old_sink_out) sink()
+      while (sink.number(type = "message") > old_sink_msg) sink(type = "message")
+      try(close(msg_con), silent = TRUE)
       cleanup_apollo()
     }, add = TRUE)
   } else {
