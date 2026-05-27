@@ -2,26 +2,25 @@ Package: klue
 Type: Package
 Title: Hybrid Machine Learning and Random-Utility Workflow for Latent
     Class Multinomial Logit Model Specification
-Version: 0.2.4
+Version: 0.2.5
 Authors@R: person("Oliver", "Frings",
                   email = "oliver.frings@agroparistech.fr",
                   role = c("aut", "cre"))
 Author: Oliver Frings [aut, cre]
 Maintainer: Oliver Frings <oliver.frings@agroparistech.fr>
-Description: Implements the three-step workflow from Frings (2026, working
-    paper) for specifying latent class multinomial logit (LCMNL) models:
-    (1) initialise the maximum-likelihood multi-start from six clusterings
-    of respondents' revealed-preference signatures (k-means, Gaussian
-    mixture, three hierarchical methods, partitioning around medoids);
-    (2) estimate LCMNL across a user-specified range of class counts;
-    (3) benchmark against a mixed multinomial logit (MMNL) and report
-    BIC, AIC, ICL, and a classification-entropy diagnostic alongside
-    class-specific coefficients. Accepts any discrete-choice dataset in
-    long or wide format, with optional availability columns and per-
-    attribute scaling. Validated bit-exactly against five public
-    reference datasets (Vittel water-quality discrete choice experiment,
+Description: Implements the three-step workflow from Frings (2026,
+    working paper) for specifying latent class multinomial logit
+    (LCMNL) models. The maximum-likelihood multi-start is initialised
+    from six clusterings of respondents' revealed-preference signatures
+    (k-means, Gaussian mixture, hierarchical clustering with Ward,
+    complete, and average linkage, and partitioning around medoids);
+    LCMNL is estimated across a user-specified range of class counts;
+    and a mixed multinomial logit (MMNL) benchmark is reported alongside
+    BIC, AIC, ICL, and a classification-entropy diagnostic. Accepts
+    long- or wide-format discrete-choice data with optional availability
+    columns. Validated against five public reference datasets (Vittel,
     Apollo mode and route choice, Electricity, Swissmetro). Wraps the
-    'apollo' package for the underlying maximum-likelihood estimation.
+    'apollo' package for maximum-likelihood estimation.
 License: MIT + file LICENSE
 URL: https://github.com/o-frings/klue
 BugReports: https://github.com/o-frings/klue/issues
