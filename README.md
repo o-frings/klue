@@ -62,21 +62,26 @@ CSVs to `output/`, returns a results list invisibly.
 
 ```r
 res <- run_lcmnl_workflow(
-  data       = my_data,
-  format     = "wide",
-  id_col     = "ID",
-  task_col   = "task",                     # or NULL to auto-number
-  choice_col = "choice",                   # integer 1..J of chosen alt
-  attributes = list(
+  data           = my_data,
+  format         = "wide",
+  id_col         = "ID",
+  task_col       = "task",                 # or NULL to auto-number
+  choice_col     = "choice",               # integer 1..J of chosen alt
+  attribute_cols = list(
     time = c("time_alt1", "time_alt2", "time_alt3"),
     qual = c("qual_alt1", "qual_alt2", "qual_alt3")
   ),
-  price      = c("cost_alt1", "cost_alt2", "cost_alt3")
+  price_col      = c("cost_alt1", "cost_alt2", "cost_alt3"),
+  avail_col      = c("av_alt1", "av_alt2", "av_alt3")   # optional
 )
 ```
 
 Use `NA` in an attribute slot to encode a structural zero on that
 alternative (e.g. some attributes only apply to some alternatives).
+
+Long and wide use the **same argument names** (`attribute_cols`,
+`price_col`, `avail_col`); only the *type* differs (scalar in long,
+length-J vector or named list in wide).
 
 ---
 

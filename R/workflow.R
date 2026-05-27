@@ -282,24 +282,41 @@ build_database_long <- function(data,
 
 build_database_wide <- function(data,
                                 id_col, task_col = NULL, choice_col,
-                                attributes, price,
-                                availability = NULL,
+                                attribute_cols = NULL, price_col = NULL,
+                                avail_col = NULL,
                                 scalings = NULL,
+                                # Deprecated aliases (kept for backward compat):
+                                attributes = NULL, price = NULL,
+                                availability = NULL,
                                 verbose = TRUE) {
-  stopifnot(is.list(attributes), length(attributes) >= 1,
-            !is.null(names(attributes)),
-            all(nzchar(names(attributes))))
+  # Resolve aliases: new canonical name wins; old name accepted silently.
+  if (is.null(attribute_cols) && !is.null(attributes))   attribute_cols <- attributes
+  if (is.null(price_col)      && !is.null(price))        price_col      <- price
+  if (is.null(avail_col)      && !is.null(availability)) avail_col      <- availability
 
-  J <- length(price)
-  for (nm in names(attributes)) {
-    if (length(attributes[[nm]]) != J) {
-      stop(sprintf("attributes[['%s']] has length %d, expected %d (= length(price)).",
-                   nm, length(attributes[[nm]]), J))
+  if (is.null(attribute_cols)) {
+    stop("`attribute_cols` is required: a named list of length-J ",
+         "character vectors of column names (one vector per attribute).")
+  }
+  if (is.null(price_col)) {
+    stop("`price_col` is required: a length-J character vector of price ",
+         "column names (one per alternative).")
+  }
+
+  stopifnot(is.list(attribute_cols), length(attribute_cols) >= 1,
+            !is.null(names(attribute_cols)),
+            all(nzchar(names(attribute_cols))))
+
+  J <- length(price_col)
+  for (nm in names(attribute_cols)) {
+    if (length(attribute_cols[[nm]]) != J) {
+      stop(sprintf("attribute_cols[['%s']] has length %d, expected %d (= length(price_col)).",
+                   nm, length(attribute_cols[[nm]]), J))
     }
   }
-  if (!is.null(availability) && length(availability) != J) {
-    stop(sprintf("availability has length %d, expected %d.",
-                 length(availability), J))
+  if (!is.null(avail_col) && length(avail_col) != J) {
+    stop(sprintf("avail_col has length %d, expected %d.",
+                 length(avail_col), J))
   }
 
   raw <- if (is.character(data) && length(data) == 1) {
@@ -312,12 +329,12 @@ build_database_wide <- function(data,
     as.data.frame(data)
   }
 
-  attr_cols_used <- unlist(lapply(attributes, function(v) v[!is.na(v)]),
+  attr_cols_used <- unlist(lapply(attribute_cols, function(v) v[!is.na(v)]),
                            use.names = FALSE)
   required <- unique(c(id_col, if (!is.null(task_col)) task_col else NULL,
                        choice_col,
-                       attr_cols_used, price,
-                       if (!is.null(availability)) availability else NULL))
+                       attr_cols_used, price_col,
+                       if (!is.null(avail_col)) avail_col else NULL))
   miss <- setdiff(required, names(raw))
   if (length(miss) > 0) {
     stop("Columns missing from data: ", paste(miss, collapse = ", "))
@@ -334,11 +351,11 @@ build_database_wide <- function(data,
   }
   raw[[".task_idx"]] <- as.integer(factor(paste(raw$.resp, raw$.task_raw, sep = "_")))
 
-  if (!is.null(availability)) {
+  if (!is.null(avail_col)) {
     for (j in seq_len(J)) {
-      raw[[availability[j]]] <- .coerce_numeric_zero_na(raw[[availability[j]]])
+      raw[[avail_col[j]]] <- .coerce_numeric_zero_na(raw[[avail_col[j]]])
     }
-    avail_sum_per_row <- rowSums(as.matrix(raw[, availability, drop = FALSE]))
+    avail_sum_per_row <- rowSums(as.matrix(raw[, avail_col, drop = FALSE]))
     keep <- avail_sum_per_row == J
     n_total <- nrow(raw); n_keep <- sum(keep)
     if (verbose && n_keep < n_total) {
@@ -370,7 +387,7 @@ build_database_wide <- function(data,
   N <- length(unique(raw[[".resp"]]))
   T_const <- as.integer(nrow(raw) / N)
 
-  attr_names <- names(attributes)
+  attr_names <- names(attribute_cols)
   Ng <- length(attr_names)
 
   db <- data.frame(ID = rep(seq_len(N), each = T_const),
@@ -378,7 +395,7 @@ build_database_wide <- function(data,
 
   for (j in seq_len(J)) {
     for (a in seq_along(attr_names)) {
-      col_nm <- attributes[[attr_names[a]]][j]
+      col_nm <- attribute_cols[[attr_names[a]]][j]
       vals <- if (is.na(col_nm)) {
         rep(0, nrow(raw))
       } else {
@@ -388,7 +405,7 @@ build_database_wide <- function(data,
       if (!is.null(sc) && sc != 1) vals <- vals / sc
       db[[sprintf("x%d_%d", a, j)]] <- vals
     }
-    pvals <- .coerce_numeric_zero_na(raw[[price[j]]])
+    pvals <- .coerce_numeric_zero_na(raw[[price_col[j]]])
     psc <- scalings[["price"]]
     if (!is.null(psc) && psc != 1) pvals <- pvals / psc
     db[[sprintf("price_%d", j)]] <- pvals
@@ -434,13 +451,15 @@ build_database <- function(data,
   format <- match.arg(format)
   args <- list(...)
   if (format == "auto") {
-    if (!is.null(args$attributes) && is.list(args$attributes)) {
+    attrs_arg <- args$attribute_cols
+    if (is.null(attrs_arg)) attrs_arg <- args$attributes  # accept old name
+    if (!is.null(attrs_arg) && is.list(attrs_arg)) {
       format <- "wide"
     } else if (!is.null(args$alt_col)) {
       format <- "long"
     } else {
       stop("Could not infer format. Pass format = 'long' or 'wide' explicitly, ",
-           "or supply `alt_col` (long) or `attributes` as a named list (wide).")
+           "or supply `alt_col` (long) or `attribute_cols` as a named list (wide).")
     }
   }
   if (format == "long") {
@@ -712,20 +731,20 @@ klue_demo <- function(full = FALSE, verbose = TRUE) {
   }
 
   run_lcmnl_workflow(
-    data       = d,
-    format     = "wide",
-    id_col     = "ID", task_col = NULL, choice_col = "choice",
-    attributes = list(
+    data           = d,
+    format         = "wide",
+    id_col         = "ID", task_col = NULL, choice_col = "choice",
+    attribute_cols = list(
       travel_time = c("tt1", "tt2"),
       headway     = c("hw1", "hw2"),
       changes     = c("ch1", "ch2")
     ),
-    price      = c("tc1", "tc2"),
-    scalings   = list(travel_time = 60, headway = 60, price = 10),
-    C_cands    = if (full) 1:6 else 1:2,
-    run_mmnl   = full,
-    write_csv  = FALSE,
-    verbose    = verbose,
-    output_prefix = "demo"
+    price_col      = c("tc1", "tc2"),
+    scalings       = list(travel_time = 60, headway = 60, price = 10),
+    C_cands        = if (full) 1:6 else 1:2,
+    run_mmnl       = full,
+    write_csv      = FALSE,
+    verbose        = verbose,
+    output_prefix  = "demo"
   )
 }

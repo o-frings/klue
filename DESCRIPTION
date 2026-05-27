@@ -1,7 +1,7 @@
 Package: klue
 Type: Package
 Title: A Hybrid ML and Random-Utility Workflow for LCMNL Specification
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("Oliver", "Frings",
                   email = "oliver.frings@agroparistech.fr",
                   role = c("aut", "cre"))
