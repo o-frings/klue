@@ -1,15 +1,32 @@
-citHeader("To cite klue in publications use:")
+citHeader("To cite klue in publications, please cite both the klue paper and Apollo (the underlying estimator):")
 
-bibentry(
-  bibtype  = "Article",
-  title    = "A Hybrid Machine Learning and Random Utility Framework for Latent Class Model Specification",
-  author   = person("Oliver", "Frings"),
-  journal  = "Journal of Choice Modelling",
-  year     = 2026,
-  note     = "R package klue, version 0.1.0",
-  textVersion =
-    paste("Frings, O. (2026).",
-          "A Hybrid Machine Learning and Random Utility Framework for",
-          "Latent Class Model Specification.",
-          "Journal of Choice Modelling.")
+c(
+  bibentry(
+    bibtype  = "Article",
+    title    = "A Hybrid Machine Learning and Random Utility Framework for Latent Class Model Specification",
+    author   = person("Oliver", "Frings"),
+    journal  = "Journal of Choice Modelling",
+    year     = 2026,
+    note     = "R package klue, version 0.1.0",
+    textVersion =
+      paste("Frings, O. (2026).",
+            "A Hybrid Machine Learning and Random Utility Framework for",
+            "Latent Class Model Specification.",
+            "Journal of Choice Modelling.")
+  ),
+  bibentry(
+    bibtype  = "Article",
+    title    = "Apollo: a flexible, powerful and customisable freeware package for choice model estimation and application",
+    author   = c(person("Stephane", "Hess"), person("David", "Palma")),
+    journal  = "Journal of Choice Modelling",
+    year     = 2019,
+    volume   = 32,
+    pages    = "100170",
+    doi      = "10.1016/j.jocm.2019.100170",
+    textVersion =
+      paste("Hess, S., & Palma, D. (2019).",
+            "Apollo: a flexible, powerful and customisable freeware package",
+            "for choice model estimation and application.",
+            "Journal of Choice Modelling, 32, 100170.")
+  )
 )

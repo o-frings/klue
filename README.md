@@ -117,5 +117,23 @@ adapters. See `R/test_klue.R` in the source tree for the test.
 
 ## Citing
 
-Frings, O. (2026). *A Hybrid Machine Learning and Random Utility Framework
-for Latent Class Model Specification*. Journal of Choice Modelling.
+If you use klue in published work, please cite **both** the klue paper and
+Apollo (the underlying maximum-likelihood estimator):
+
+- Frings, O. (2026). *A Hybrid Machine Learning and Random Utility Framework
+  for Latent Class Model Specification*. Journal of Choice Modelling.
+- Hess, S., & Palma, D. (2019). *Apollo: a flexible, powerful and
+  customisable freeware package for choice model estimation and
+  application*. Journal of Choice Modelling, 32, 100170.
+  [doi:10.1016/j.jocm.2019.100170](https://doi.org/10.1016/j.jocm.2019.100170)
+
+```r
+citation("klue")    # returns both BibTeX entries
+```
+
+## Acknowledgements
+
+klue wraps the [Apollo](http://www.ApolloChoiceModelling.com/) choice-model
+estimation engine (Hess & Palma 2019). The hybrid workflow, clustering-based
+initialisation, and diagnostics layer are this package's contribution; the
+underlying LCMNL and MMNL maximum-likelihood machinery is Apollo's.

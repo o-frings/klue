@@ -637,11 +637,16 @@ run_lcmnl_workflow <- function(database = NULL,
                   output_dir))
     }
     if (!isTRUE(getOption("klue.suppress_citation", FALSE))) {
-      cat("\n--- Please cite klue if you use it in published work ---\n")
+      cat("\n--- Please cite klue and Apollo if you use them in published work ---\n")
       cat("  Frings, O. (2026). A Hybrid Machine Learning and Random Utility\n")
       cat("  Framework for Latent Class Model Specification.\n")
       cat("  Journal of Choice Modelling.\n")
-      cat("  citation(\"klue\")  # full BibTeX entry\n")
+      cat("\n")
+      cat("  Hess, S., & Palma, D. (2019). Apollo: a flexible, powerful and\n")
+      cat("  customisable freeware package for choice model estimation and\n")
+      cat("  application. Journal of Choice Modelling, 32, 100170.\n")
+      cat("\n")
+      cat("  citation(\"klue\")  # full BibTeX entries\n")
     }
   }
 
