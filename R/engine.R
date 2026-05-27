@@ -584,7 +584,7 @@ make_apollo_lcPars <- function(C, dgp = DGP_DEFAULT) {
     '}'
   )
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
@@ -630,7 +630,7 @@ make_apollo_probabilities_lc <- function(C, dgp = DGP_DEFAULT) {
     '}'
   )
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
@@ -1018,7 +1018,7 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
   lines <- c(lines, '  randcoeff[["b_price"]] <- -exp(mu_price + exp(sigma_price) * draws_price)')
   lines <- c(lines, '  return(randcoeff)', '}')
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
@@ -1053,7 +1053,7 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
     '}'
   )
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
@@ -2133,7 +2133,7 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   }
   lines <- c(lines, '  return(randcoeff)', '}')
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 

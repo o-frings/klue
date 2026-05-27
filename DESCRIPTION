@@ -22,9 +22,9 @@ BugReports: https://github.com/o-frings/klue/issues
 Encoding: UTF-8
 LazyData: false
 Depends:
-    R (>= 3.6.0)
+    R (>= 3.6.0),
+    apollo (>= 0.3.0)
 Imports:
-    apollo (>= 0.3.0),
     mclust,
     cluster,
     stats,
