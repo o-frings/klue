@@ -10,6 +10,8 @@ export(klue_demo)
 export(make_dgp_config)
 export(estimate_lcmnl_multistart)
 export(estimate_mmnl)
+export(estimate_mmnl_corr)
+export(klue_mmnl_defaults)
 
 import(apollo)
 importFrom(mclust, Mclust, mclustBIC)

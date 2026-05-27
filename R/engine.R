@@ -76,10 +76,63 @@ generate_segment_deviations <- function(K_classes, n_beta = 5L) {
 
 # Configuration
 MAX_ITER      <- 500L
-N_DRAWS_MMNL  <- 3000L
 OUTPUT_DIR    <- "output"
 # Note: package version does not create OUTPUT_DIR at load time. The workflow
 # creates whichever output_dir the user requests, lazily.
+
+# =============================================================================
+# MMNL DEFAULTS
+# -----------------------------------------------------------------------------
+# All values below are overridable per-call (estimate_mmnl, estimate_mmnl_corr,
+# run_lcmnl_workflow via `mmnl_opts`) and via global options
+# (`getOption("klue.mmnl.<name>")`). Call `klue_mmnl_defaults()` for the
+# active settings as a named list.
+# -----------------------------------------------------------------------------
+N_DRAWS_MMNL              <- 3000L     # interNDraws for the main stage
+N_DRAWS_MMNL_STAGE1       <- 200L      # interNDraws for the warm-start stage
+DRAWS_TYPE_MMNL           <- "mlhs"    # one of "mlhs","halton","pmc","sobol"
+ESTIMATION_ROUTINE_MMNL   <- "bgw"     # one of "bgw","bfgs","nr"
+# Box constraints on the log-normal price parameters. The price coefficient
+# is b_price = -exp(mu_price + exp(sigma_price) * draws). Without bounds the
+# optimiser can drift mu_price into a region where b_price is enormous and
+# the likelihood becomes non-finite. Pass NULL to disable.
+MU_PRICE_BOUNDS_MMNL      <- c(-5, 3)
+SIGMA_PRICE_BOUNDS_MMNL   <- c(-3, 1)
+
+# Default number of cores for Apollo's MMNL cluster. Picks physical cores
+# minus one (clamped to >= 1). Override via `n_cores` arg or the
+# `klue.mmnl.n_cores` option.
+.klue_default_mmnl_cores <- function() {
+  nc <- tryCatch(parallel::detectCores(logical = FALSE),
+                 error = function(e) NA_integer_)
+  if (is.na(nc) || !is.finite(nc) || nc < 1L) nc <- 1L
+  max(1L, as.integer(nc) - 1L)
+}
+
+#' MMNL default settings
+#'
+#' Returns the active MMNL defaults as a named list. Values can be overridden
+#' per-call (arguments to \code{estimate_mmnl} / \code{estimate_mmnl_corr} /
+#' \code{run_lcmnl_workflow}) or globally via \code{options()} entries
+#' \code{klue.mmnl.n_draws}, \code{klue.mmnl.n_draws_stage1},
+#' \code{klue.mmnl.draws_type}, \code{klue.mmnl.estimation_routine},
+#' \code{klue.mmnl.n_cores}, \code{klue.mmnl.mu_price_bounds},
+#' \code{klue.mmnl.sigma_price_bounds}, \code{klue.mmnl.quiet}.
+#'
+#' @return A named list of the currently active defaults.
+#' @export
+klue_mmnl_defaults <- function() {
+  list(
+    n_draws            = getOption("klue.mmnl.n_draws",            N_DRAWS_MMNL),
+    n_draws_stage1     = getOption("klue.mmnl.n_draws_stage1",     N_DRAWS_MMNL_STAGE1),
+    draws_type         = getOption("klue.mmnl.draws_type",         DRAWS_TYPE_MMNL),
+    estimation_routine = getOption("klue.mmnl.estimation_routine", ESTIMATION_ROUTINE_MMNL),
+    n_cores            = getOption("klue.mmnl.n_cores",            .klue_default_mmnl_cores()),
+    mu_price_bounds    = getOption("klue.mmnl.mu_price_bounds",    MU_PRICE_BOUNDS_MMNL),
+    sigma_price_bounds = getOption("klue.mmnl.sigma_price_bounds", SIGMA_PRICE_BOUNDS_MMNL),
+    quiet              = getOption("klue.mmnl.quiet",              TRUE)
+  )
+}
 
 # =============================================================================
 # SECTION 1: DATA GENERATION
@@ -531,7 +584,7 @@ make_apollo_lcPars <- function(C, dgp = DGP_DEFAULT) {
     '}'
   )
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
@@ -577,7 +630,7 @@ make_apollo_probabilities_lc <- function(C, dgp = DGP_DEFAULT) {
     '}'
   )
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
@@ -965,7 +1018,7 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
   lines <- c(lines, '  randcoeff[["b_price"]] <- -exp(mu_price + exp(sigma_price) * draws_price)')
   lines <- c(lines, '  return(randcoeff)', '}')
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
@@ -1000,21 +1053,31 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
     '}'
   )
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
 # Helper: run one Apollo MMNL estimation with given draws and starting values
-.run_apollo_mmnl <- function(database, n_draws, start_beta, dgp = DGP_DEFAULT) {
+.run_apollo_mmnl <- function(database, n_draws, start_beta,
+                             dgp                = DGP_DEFAULT,
+                             n_cores            = NULL,
+                             draws_type         = DRAWS_TYPE_MMNL,
+                             estimation_routine = ESTIMATION_ROUTINE_MMNL,
+                             bounds             = NULL) {
   cleanup_apollo()
   n_generic <- dgp$n_generic
+
+  if (is.null(n_cores)) {
+    n_cores <- getOption("klue.mmnl.n_cores", .klue_default_mmnl_cores())
+  }
+  n_cores <- max(1L, as.integer(n_cores))
 
   apollo_control <<- list(
     modelName       = paste0("MMNL_sim_", as.integer(Sys.time()) %% 100000,
                              "_", sample.int(10000, 1)),
     modelDescr      = "MMNL simulation",
     indivID         = "ID",
-    nCores          = 10,
+    nCores          = n_cores,
     mixing          = TRUE,
     outputDirectory = tempdir()
   )
@@ -1024,20 +1087,27 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
 
   draw_names <- c(paste0("draws_x", 1:n_generic), "draws_price")
   apollo_draws <<- list(
-    interDrawsType = "mlhs",
-    interNDraws    = n_draws,
+    interDrawsType = draws_type,
+    interNDraws    = as.integer(n_draws),
     interUnifDraws = c(),
     interNormDraws = draw_names,
-    intraDrawsType = "mlhs",
+    intraDrawsType = draws_type,
     intraNDraws    = 0,
     intraUnifDraws = c(),
     intraNormDraws = c()
   )
 
   apollo_randCoeff <<- .make_apollo_randCoeff(dgp)
+  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
 
   if (exists("apollo_lcPars", envir = .GlobalEnv)) rm("apollo_lcPars", envir = .GlobalEnv)
 
+  # NOTE: apollo_probabilities is set *before* apollo_validateInputs because
+  # validateInputs runs an internal pre-processing check that inspects the
+  # current apollo_probabilities in globalenv. If it isn't set yet, Apollo
+  # emits "WARNING: The pre-processing of 'apollo_probabilities' failed in
+  # initial testing." and the subsequent apollo_estimate call fails for
+  # certain (J, n_generic) combinations.
   apollo_inputs <<- tryCatch(
     apollo_validateInputs(
       apollo_beta    = apollo_beta,
@@ -1045,40 +1115,123 @@ estimate_lcmnl_multistart_onehot <- function(database, C, dgp = DGP_DEFAULT) {
       database       = database,
       apollo_control = apollo_control
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl: apollo_validateInputs error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
   if (is.null(apollo_inputs)) return(NULL)
 
-  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
+  est_settings <- list(
+    estimationRoutine = estimation_routine,
+    writeIter         = FALSE,
+    silent            = TRUE
+  )
+  if (!is.null(bounds)) {
+    est_settings$bounds <- bounds
+  }
 
   tryCatch(
     apollo_estimate(
       apollo_beta          = apollo_beta,
       apollo_fixed         = apollo_fixed,
       apollo_probabilities = apollo_probabilities,
-      apollo_inputs        = apollo_inputs
+      apollo_inputs        = apollo_inputs,
+      estimate_settings    = est_settings
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl: apollo_estimate error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
 }
 
-estimate_mmnl <- function(database, n_draws = N_DRAWS_MMNL, n_draws_stage1 = 200L,
-                          dgp = DGP_DEFAULT) {
+estimate_mmnl <- function(database,
+                          n_draws            = NULL,
+                          n_draws_stage1     = NULL,
+                          draws_type         = NULL,
+                          estimation_routine = NULL,
+                          n_cores            = NULL,
+                          quiet              = NULL,
+                          mu_price_bounds    = NULL,
+                          sigma_price_bounds = NULL,
+                          dgp                = DGP_DEFAULT) {
+  d <- klue_mmnl_defaults()
+  if (is.null(n_draws))            n_draws            <- d$n_draws
+  if (is.null(n_draws_stage1))     n_draws_stage1     <- d$n_draws_stage1
+  if (is.null(draws_type))         draws_type         <- d$draws_type
+  if (is.null(estimation_routine)) estimation_routine <- d$estimation_routine
+  if (is.null(n_cores))            n_cores            <- d$n_cores
+  if (is.null(quiet))              quiet              <- d$quiet
+  # Bounds: pass NA explicitly to disable; NULL means "use defaults".
+  if (is.null(mu_price_bounds))    mu_price_bounds    <- d$mu_price_bounds
+  if (is.null(sigma_price_bounds)) sigma_price_bounds <- d$sigma_price_bounds
+  if (length(mu_price_bounds)    == 1 && is.na(mu_price_bounds))    mu_price_bounds    <- NULL
+  if (length(sigma_price_bounds) == 1 && is.na(sigma_price_bounds)) sigma_price_bounds <- NULL
+
   cleanup_apollo()
 
-  old_sink <- sink.number()
-  tf <- tempfile(); sink(tf)
-  on.exit({
-    while (sink.number() > old_sink) sink()
-    if (file.exists(tf)) unlink(tf)
-    cleanup_apollo()
-  }, add = TRUE)
+  # If `quiet`, redirect Apollo's stdout to a tempfile so we can attach the
+  # last 40 lines to the result when something fails. The file is NOT deleted
+  # on exit — its path is returned with the fail result so users can inspect.
+  log_file <- tempfile(pattern = "klue_mmnl_", fileext = ".log")
+  if (isTRUE(quiet)) {
+    old_sink_out <- sink.number()
+    old_sink_msg <- sink.number(type = "message")
+    msg_con <- file(log_file, open = "at")
+    sink(log_file)
+    sink(msg_con, type = "message")
+    on.exit({
+      while (sink.number() > old_sink_out) sink()
+      while (sink.number(type = "message") > old_sink_msg) sink(type = "message")
+      try(close(msg_con), silent = TRUE)
+      cleanup_apollo()
+    }, add = TRUE)
+  } else {
+    on.exit(cleanup_apollo(), add = TRUE)
+  }
 
   N <- length(unique(database$ID))
   n_beta <- dgp$n_beta; n_generic <- dgp$n_generic; J <- dgp$n_alternatives
 
-  fail_result <- list(converged = FALSE, LL = -Inf, BIC = Inf, AIC = Inf,
-                       k = 0, mu = rep(0, n_beta), sigma = rep(0, n_beta))
+  read_log_tail <- function() {
+    if (!isTRUE(quiet) || !file.exists(log_file)) return(NULL)
+    out <- tryCatch(readLines(log_file, warn = FALSE), error = function(e) NULL)
+    if (length(out) == 0) NULL else utils::tail(out, 40L)
+  }
+
+  fail_with <- function(reason) {
+    list(converged = FALSE, LL = -Inf, BIC = Inf, AIC = Inf,
+         k = 0, mu = rep(0, n_beta), sigma = rep(0, n_beta),
+         reason          = reason,
+         apollo_log_tail = read_log_tail(),
+         apollo_log_path = if (isTRUE(quiet) && file.exists(log_file)) log_file else NULL,
+         settings        = list(n_draws = n_draws, n_draws_stage1 = n_draws_stage1,
+                                draws_type = draws_type,
+                                estimation_routine = estimation_routine,
+                                n_cores = n_cores,
+                                mu_price_bounds = mu_price_bounds,
+                                sigma_price_bounds = sigma_price_bounds))
+  }
+
+  # Build a bounds list keyed by name for whichever start vector is in play.
+  make_bounds <- function(beta_vec) {
+    if (is.null(mu_price_bounds) && is.null(sigma_price_bounds)) return(NULL)
+    lower <- rep(-Inf, length(beta_vec))
+    upper <- rep( Inf, length(beta_vec))
+    names(lower) <- names(upper) <- names(beta_vec)
+    if (!is.null(mu_price_bounds) && "mu_price" %in% names(beta_vec)) {
+      lower["mu_price"] <- mu_price_bounds[1]
+      upper["mu_price"] <- mu_price_bounds[2]
+    }
+    if (!is.null(sigma_price_bounds) && "sigma_price" %in% names(beta_vec)) {
+      lower["sigma_price"] <- sigma_price_bounds[1]
+      upper["sigma_price"] <- sigma_price_bounds[2]
+    }
+    list(lower = lower, upper = upper)
+  }
 
   # MNL-informed starting values (MNL = LCMNL with C=1)
   mnl_starts <- matrix(0, nrow = 1, ncol = n_beta)
@@ -1101,11 +1254,45 @@ estimate_mmnl <- function(database, n_draws = N_DRAWS_MMNL, n_draws_stage1 = 200
   for (a in 1:n_generic) beta0[paste0("sigma_x", a)] <- log(0.5)
   beta0["sigma_price"] <- log(0.3)
 
-  stage1 <- .run_apollo_mmnl(database, n_draws_stage1, beta0, dgp)
-  beta1 <- if (!is.null(stage1)) stage1$estimate else beta0
+  # Stage 1: cheap warm-start. If it returns non-finite estimates or pins to a
+  # bound (a sign the optimiser failed to converge sensibly) we fall back to
+  # the MNL-derived beta0 for stage 2.
+  stage1 <- .run_apollo_mmnl(database, n_draws_stage1, beta0,
+                             dgp                = dgp,
+                             n_cores            = n_cores,
+                             draws_type         = draws_type,
+                             estimation_routine = estimation_routine,
+                             bounds             = make_bounds(beta0))
 
-  model <- .run_apollo_mmnl(database, n_draws, beta1, dgp)
-  if (is.null(model)) return(fail_result)
+  beta1 <- beta0
+  if (!is.null(stage1) && !is.null(stage1$estimate)) {
+    est_s1 <- stage1$estimate
+    ok <- all(is.finite(est_s1))
+    if (ok) {
+      bnd <- make_bounds(beta0)
+      if (!is.null(bnd)) {
+        rng <- bnd$upper - bnd$lower
+        rng[!is.finite(rng)] <- 0
+        slack <- 1e-3 * rng
+        ok <- all(est_s1 >= bnd$lower + slack & est_s1 <= bnd$upper - slack,
+                  na.rm = TRUE)
+      }
+    }
+    if (ok) beta1 <- est_s1
+  }
+
+  # Stage 2: main estimation with full draws.
+  model <- .run_apollo_mmnl(database, n_draws, beta1,
+                            dgp                = dgp,
+                            n_cores            = n_cores,
+                            draws_type         = draws_type,
+                            estimation_routine = estimation_routine,
+                            bounds             = make_bounds(beta1))
+  if (is.null(model))                                return(fail_with("stage2_apollo_estimate_failed"))
+  if (is.null(model$estimate) ||
+      !all(is.finite(model$estimate)))               return(fail_with("stage2_non_finite_estimates"))
+  if (is.null(model$LLout) || !is.finite(model$LLout[1]))
+                                                     return(fail_with("stage2_non_finite_LL"))
 
   est    <- model$estimate
   LL     <- model$LLout[1]
@@ -1113,10 +1300,17 @@ estimate_mmnl <- function(database, n_draws = N_DRAWS_MMNL, n_draws_stage1 = 200
   BIC    <- -2 * LL + n_free * log(N)
   AIC    <- -2 * LL + 2 * n_free
 
-  mu_names <- c(paste0("mu_x", 1:n_generic), "mu_price")
+  mu_names    <- c(paste0("mu_x", 1:n_generic), "mu_price")
   sigma_names <- c(paste0("sigma_x", 1:n_generic), "sigma_price")
   list(converged = TRUE, LL = LL, BIC = BIC, AIC = AIC, k = n_free,
-       mu = est[mu_names], sigma = exp(est[sigma_names]))
+       mu = est[mu_names], sigma = exp(est[sigma_names]),
+       reason = "ok", apollo_log_tail = NULL, apollo_log_path = NULL,
+       settings = list(n_draws = n_draws, n_draws_stage1 = n_draws_stage1,
+                       draws_type = draws_type,
+                       estimation_routine = estimation_routine,
+                       n_cores = n_cores,
+                       mu_price_bounds = mu_price_bounds,
+                       sigma_price_bounds = sigma_price_bounds))
 }
 
 # =============================================================================
@@ -1939,20 +2133,30 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   }
   lines <- c(lines, '  return(randcoeff)', '}')
   fn <- eval(parse(text = paste(lines, collapse = "\n")))
-  environment(fn) <- globalenv()
+  environment(fn) <- asNamespace("apollo")
   fn
 }
 
-.run_apollo_mmnl_corr <- function(database, n_draws, start_beta, dgp = DGP_DEFAULT) {
+.run_apollo_mmnl_corr <- function(database, n_draws, start_beta,
+                                  dgp                = DGP_DEFAULT,
+                                  n_cores            = NULL,
+                                  draws_type         = DRAWS_TYPE_MMNL,
+                                  estimation_routine = ESTIMATION_ROUTINE_MMNL,
+                                  bounds             = NULL) {
   cleanup_apollo()
   n_generic <- dgp$n_generic
+
+  if (is.null(n_cores)) {
+    n_cores <- getOption("klue.mmnl.n_cores", .klue_default_mmnl_cores())
+  }
+  n_cores <- max(1L, as.integer(n_cores))
 
   apollo_control <<- list(
     modelName       = paste0("MMNL_corr_", as.integer(Sys.time()) %% 100000,
                              "_", sample.int(10000, 1)),
     modelDescr      = "Correlated MMNL simulation",
     indivID         = "ID",
-    nCores          = 10,
+    nCores          = n_cores,
     mixing          = TRUE,
     outputDirectory = tempdir()
   )
@@ -1962,20 +2166,23 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
 
   draw_names <- c(paste0("draws_x", 1:n_generic), "draws_price")
   apollo_draws <<- list(
-    interDrawsType = "mlhs",
-    interNDraws    = n_draws,
+    interDrawsType = draws_type,
+    interNDraws    = as.integer(n_draws),
     interUnifDraws = c(),
     interNormDraws = draw_names,
-    intraDrawsType = "mlhs",
+    intraDrawsType = draws_type,
     intraNDraws    = 0,
     intraUnifDraws = c(),
     intraNormDraws = c()
   )
 
   apollo_randCoeff <<- .make_apollo_randCoeff_corr(dgp)
+  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
 
   if (exists("apollo_lcPars", envir = .GlobalEnv)) rm("apollo_lcPars", envir = .GlobalEnv)
 
+  # See note in .run_apollo_mmnl: apollo_probabilities must be set before
+  # apollo_validateInputs.
   apollo_inputs <<- tryCatch(
     apollo_validateInputs(
       apollo_beta    = apollo_beta,
@@ -1983,48 +2190,107 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
       database       = database,
       apollo_control = apollo_control
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl_corr: apollo_validateInputs error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
   if (is.null(apollo_inputs)) return(NULL)
 
-  apollo_probabilities <<- .make_apollo_prob_mmnl(dgp)
+  est_settings <- list(
+    estimationRoutine = estimation_routine,
+    writeIter         = FALSE,
+    silent            = TRUE
+  )
+  if (!is.null(bounds)) {
+    est_settings$bounds <- bounds
+  }
 
   tryCatch(
     apollo_estimate(
       apollo_beta          = apollo_beta,
       apollo_fixed         = apollo_fixed,
       apollo_probabilities = apollo_probabilities,
-      apollo_inputs        = apollo_inputs
+      apollo_inputs        = apollo_inputs,
+      estimate_settings    = est_settings
     ),
-    error = function(e) NULL
+    error = function(e) {
+      message("klue:.run_apollo_mmnl_corr: apollo_estimate error: ",
+              conditionMessage(e))
+      NULL
+    }
   )
 }
 
-estimate_mmnl_corr <- function(database, n_draws = N_DRAWS_MMNL, n_draws_stage1 = 200L,
-                               dgp = DGP_DEFAULT) {
+estimate_mmnl_corr <- function(database,
+                               n_draws            = NULL,
+                               n_draws_stage1     = NULL,
+                               draws_type         = NULL,
+                               estimation_routine = NULL,
+                               n_cores            = NULL,
+                               quiet              = NULL,
+                               dgp                = DGP_DEFAULT) {
+  d <- klue_mmnl_defaults()
+  if (is.null(n_draws))            n_draws            <- d$n_draws
+  if (is.null(n_draws_stage1))     n_draws_stage1     <- d$n_draws_stage1
+  if (is.null(draws_type))         draws_type         <- d$draws_type
+  if (is.null(estimation_routine)) estimation_routine <- d$estimation_routine
+  if (is.null(n_cores))            n_cores            <- d$n_cores
+  if (is.null(quiet))              quiet              <- d$quiet
+
   cleanup_apollo()
 
-  old_sink <- sink.number()
-  tf <- tempfile(); sink(tf)
-  on.exit({
-    while (sink.number() > old_sink) sink()
-    if (file.exists(tf)) unlink(tf)
-    cleanup_apollo()
-  }, add = TRUE)
+  log_file <- tempfile(pattern = "klue_mmnl_corr_", fileext = ".log")
+  if (isTRUE(quiet)) {
+    old_sink_out <- sink.number()
+    old_sink_msg <- sink.number(type = "message")
+    msg_con <- file(log_file, open = "at")
+    sink(log_file)
+    sink(msg_con, type = "message")
+    on.exit({
+      while (sink.number() > old_sink_out) sink()
+      while (sink.number(type = "message") > old_sink_msg) sink(type = "message")
+      try(close(msg_con), silent = TRUE)
+      cleanup_apollo()
+    }, add = TRUE)
+  } else {
+    on.exit(cleanup_apollo(), add = TRUE)
+  }
 
   N <- length(unique(database$ID))
   n_beta <- dgp$n_beta; n_generic <- dgp$n_generic; J <- dgp$n_alternatives
 
-  fail_result <- list(converged = FALSE, LL = -Inf, BIC = Inf, AIC = Inf, k = 0)
+  read_log_tail <- function() {
+    if (!isTRUE(quiet) || !file.exists(log_file)) return(NULL)
+    out <- tryCatch(readLines(log_file, warn = FALSE), error = function(e) NULL)
+    if (length(out) == 0) NULL else utils::tail(out, 40L)
+  }
+  fail_with <- function(reason) {
+    list(converged = FALSE, LL = -Inf, BIC = Inf, AIC = Inf, k = 0,
+         reason          = reason,
+         apollo_log_tail = read_log_tail(),
+         apollo_log_path = if (isTRUE(quiet) && file.exists(log_file)) log_file else NULL,
+         settings        = list(n_draws = n_draws, n_draws_stage1 = n_draws_stage1,
+                                draws_type = draws_type,
+                                estimation_routine = estimation_routine,
+                                n_cores = n_cores))
+  }
 
-  indep_fit <- estimate_mmnl(database, n_draws = n_draws_stage1,
-                              n_draws_stage1 = 100L, dgp = dgp)
+  indep_fit <- estimate_mmnl(database,
+                             n_draws            = n_draws_stage1,
+                             n_draws_stage1     = 100L,
+                             draws_type         = draws_type,
+                             estimation_routine = estimation_routine,
+                             n_cores            = n_cores,
+                             quiet              = quiet,
+                             dgp                = dgp)
 
-  attr_short <- c(paste0("x", 1:n_generic), "price")
+  attr_short  <- c(paste0("x", 1:n_generic), "price")
   chol_prefix <- c(paste0("s_x", 1:n_generic), "s_pr")
 
   if (indep_fit$converged) {
-    mu_starts <- unname(indep_fit$mu)
+    mu_starts  <- unname(indep_fit$mu)
     sig_starts <- log(unname(indep_fit$sigma))
   } else {
     mu_starts  <- c(rep(0.5, n_generic), 0.0)
@@ -2035,7 +2301,6 @@ estimate_mmnl_corr <- function(database, n_draws = N_DRAWS_MMNL, n_draws_stage1 
   beta0 <- c()
   for (j in 1:(J - 1)) beta0[paste0("asc_alt", j)] <- 0
   for (a in 1:n_beta) beta0[paste0("mu_", attr_short[a])] <- mu_starts[a]
-  # Cholesky elements: diagonal from independent model, off-diagonal = 0
   for (row in 1:n_beta) {
     for (col in 1:row) {
       name <- paste0(chol_prefix[row], "_", col)
@@ -2043,11 +2308,27 @@ estimate_mmnl_corr <- function(database, n_draws = N_DRAWS_MMNL, n_draws_stage1 
     }
   }
 
-  stage1 <- .run_apollo_mmnl_corr(database, n_draws_stage1, beta0, dgp)
-  beta1 <- if (!is.null(stage1)) stage1$estimate else beta0
+  stage1 <- .run_apollo_mmnl_corr(database, n_draws_stage1, beta0,
+                                  dgp                = dgp,
+                                  n_cores            = n_cores,
+                                  draws_type         = draws_type,
+                                  estimation_routine = estimation_routine)
+  beta1 <- beta0
+  if (!is.null(stage1) && !is.null(stage1$estimate) &&
+      all(is.finite(stage1$estimate))) {
+    beta1 <- stage1$estimate
+  }
 
-  model <- .run_apollo_mmnl_corr(database, n_draws, beta1, dgp)
-  if (is.null(model)) return(fail_result)
+  model <- .run_apollo_mmnl_corr(database, n_draws, beta1,
+                                 dgp                = dgp,
+                                 n_cores            = n_cores,
+                                 draws_type         = draws_type,
+                                 estimation_routine = estimation_routine)
+  if (is.null(model))                                 return(fail_with("stage2_apollo_estimate_failed"))
+  if (is.null(model$estimate) ||
+      !all(is.finite(model$estimate)))                return(fail_with("stage2_non_finite_estimates"))
+  if (is.null(model$LLout) || !is.finite(model$LLout[1]))
+                                                      return(fail_with("stage2_non_finite_LL"))
 
   est    <- model$estimate
   LL     <- model$LLout[1]
@@ -2055,7 +2336,12 @@ estimate_mmnl_corr <- function(database, n_draws = N_DRAWS_MMNL, n_draws_stage1 
   BIC    <- -2 * LL + n_free * log(N)
   AIC    <- -2 * LL + 2 * n_free
 
-  list(converged = TRUE, LL = LL, BIC = BIC, AIC = AIC, k = n_free)
+  list(converged = TRUE, LL = LL, BIC = BIC, AIC = AIC, k = n_free,
+       reason = "ok", apollo_log_tail = NULL, apollo_log_path = NULL,
+       settings = list(n_draws = n_draws, n_draws_stage1 = n_draws_stage1,
+                       draws_type = draws_type,
+                       estimation_routine = estimation_routine,
+                       n_cores = n_cores))
 }
 
 run_correlated_mmnl_robustness <- function(n_draws = N_DRAWS_MMNL, verbose = TRUE,
