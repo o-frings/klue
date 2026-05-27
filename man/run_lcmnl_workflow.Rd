@@ -12,6 +12,7 @@ run_lcmnl_workflow(database = NULL,
                    format = c("auto", "long", "wide"),
                    C_cands = 1:6,
                    run_mmnl = TRUE,
+                   run_mmnl_corr = FALSE,
                    mmnl_opts = list(),
                    attr_labels = NULL,
                    output_prefix = "workflow",
@@ -33,11 +34,17 @@ run_lcmnl_workflow(database = NULL,
     \code{1:6}. \code{C = 1} is the MNL baseline.}
   \item{run_mmnl}{If \code{TRUE}, also estimates an MMNL benchmark with
     independent normal random coefficients (log-normal on price).}
-  \item{mmnl_opts}{Named list of arguments forwarded to
-    \code{\link{estimate_mmnl}}. Use this to override defaults for
-    \code{n_draws}, \code{n_draws_stage1}, \code{draws_type},
-    \code{estimation_routine}, \code{n_cores}, \code{quiet},
-    \code{mu_price_bounds}, or \code{sigma_price_bounds}. See
+  \item{run_mmnl_corr}{If \code{TRUE}, additionally estimates a correlated
+    MMNL benchmark with a full Cholesky-parameterised covariance matrix
+    over random coefficients (log-normal on price). Substantially slower
+    than the independent variant because the number of free parameters
+    scales as \eqn{n_{beta}(n_{beta} + 1)/2}. When both are estimated
+    the comparison table holds both as separate rows.}
+  \item{mmnl_opts}{Named list of arguments forwarded to BOTH
+    \code{\link{estimate_mmnl}} and \code{\link{estimate_mmnl_corr}}.
+    Use this to override defaults for \code{n_draws}, \code{n_draws_stage1},
+    \code{draws_type}, \code{estimation_routine}, \code{n_cores},
+    \code{quiet}, \code{mu_price_bounds}, or \code{sigma_price_bounds}. See
     \code{\link{klue_mmnl_defaults}} for the active defaults.}
   \item{attr_labels}{Override display column names in the betas CSV.}
   \item{output_prefix}{Filename prefix for the written CSVs.}
@@ -51,12 +58,15 @@ run_lcmnl_workflow(database = NULL,
   \item{database}{Canonical wide data frame used for estimation.}
   \item{dgp}{Output of \code{make_dgp_config}.}
   \item{lcmnl}{Named list of per-C fits.}
-  \item{mmnl}{MMNL fit (\code{NULL} if disabled or failed).}
+  \item{mmnl}{Independent-normals MMNL fit (\code{NULL} if disabled or failed).}
+  \item{mmnl_corr}{Correlated MMNL fit (\code{NULL} if \code{run_mmnl_corr = FALSE}
+    or it failed).}
   \item{summary}{Data frame with one row per \code{C}: \code{LL}, \code{k},
     \code{BIC}, \code{AIC}, \code{ICL}, \code{ICL_BIC}, \code{dBIC},
     \code{dAIC}, \code{dICL}, \code{best_method}.}
   \item{class_betas}{Per-class coefficients for the BIC-best model.}
-  \item{comparison}{MNL vs LCMNL-best vs MMNL.}
+  \item{comparison}{MNL vs LCMNL-best vs MMNL (independent) vs MMNL
+    (correlated), with whichever subset was estimated.}
   \item{best_C}{BIC-best number of classes.}
   \item{best_lcmnl}{The BIC-best fit.}
 }

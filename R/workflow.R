@@ -490,7 +490,17 @@ build_database <- function(data,
 #
 # Additional args
 #   C_cands         integer vector of class counts. Default 1:6.
-#   run_mmnl        whether to estimate the MMNL benchmark. Default TRUE.
+#   run_mmnl        whether to estimate the independent-normals MMNL
+#                   benchmark (log-normal on price). Default TRUE.
+#   run_mmnl_corr   whether to additionally estimate the correlated MMNL
+#                   benchmark (full Cholesky-parameterised covariance,
+#                   log-normal on price). Default FALSE. Substantially
+#                   slower than the independent variant because the
+#                   number of free parameters scales as n_beta * (n_beta+1) / 2.
+#   mmnl_opts       Named list of tuning args forwarded to BOTH
+#                   estimate_mmnl and estimate_mmnl_corr (n_draws,
+#                   n_cores, draws_type, estimation_routine, ...).
+#                   See klue_mmnl_defaults() for the active defaults.
 #   attr_labels     override display names in the betas CSV. Default: taken
 #                   from attr(database, "attr_labels").
 #   output_prefix   filename prefix for the CSVs. Default "workflow".
@@ -498,8 +508,8 @@ build_database <- function(data,
 #   write_csv       write CSVs to disk. Default TRUE.
 #   verbose         per-C progress lines and final printout. Default TRUE.
 #
-# Returns invisibly a list with: database, dgp, lcmnl, mmnl, summary,
-# class_betas, comparison, best_C, best_lcmnl.
+# Returns invisibly a list with: database, dgp, lcmnl, mmnl, mmnl_corr,
+# summary, class_betas, comparison, best_C, best_lcmnl.
 # =============================================================================
 
 run_lcmnl_workflow <- function(database = NULL,
@@ -507,6 +517,7 @@ run_lcmnl_workflow <- function(database = NULL,
                                format = c("auto", "long", "wide"),
                                C_cands = 1:6,
                                run_mmnl = TRUE,
+                               run_mmnl_corr = FALSE,
                                mmnl_opts = list(),
                                attr_labels = NULL,
                                output_prefix = "workflow",
@@ -592,50 +603,75 @@ run_lcmnl_workflow <- function(database = NULL,
   betas_df$share  <- best$class_probs
   betas_df <- betas_df[, c("class", "share", attr_labels)]
 
-  mmnl_fit <- NULL
-  comparison_df <- NULL
-  if (run_mmnl) {
-    if (verbose) cat("\n=== Estimating MMNL (independent normals) ===\n")
+  # Small helper: estimate one MMNL flavour (indep or correlated) with shared
+  # mmnl_opts plumbing and consistent verbose reporting.
+  if (!is.list(mmnl_opts)) stop("`mmnl_opts` must be a named list.")
+  .fit_mmnl_flavour <- function(label, fn) {
+    if (verbose) cat(sprintf("\n=== Estimating MMNL (%s) ===\n", label))
     t0 <- Sys.time()
-    if (!is.list(mmnl_opts)) stop("`mmnl_opts` must be a named list.")
-    mmnl_call_args <- c(list(database = database, dgp = dgp), mmnl_opts)
-    mmnl_fit <- tryCatch(do.call(estimate_mmnl, mmnl_call_args),
-                         error = function(e) {
-                           if (verbose) cat("  MMNL failed:", conditionMessage(e), "\n")
-                           NULL
-                         })
+    args <- c(list(database = database, dgp = dgp), mmnl_opts)
+    fit <- tryCatch(do.call(fn, args),
+                    error = function(e) {
+                      if (verbose) cat("  MMNL (", label, ") failed: ",
+                                       conditionMessage(e), "\n", sep = "")
+                      NULL
+                    })
     dt <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
-    if (!is.null(mmnl_fit) && verbose) {
+    if (!is.null(fit) && verbose) {
       cat(sprintf("  converged=%s  LL=%.2f  BIC=%.2f  AIC=%.2f  k=%d  time=%.1fs\n",
-                  mmnl_fit$converged, mmnl_fit$LL, mmnl_fit$BIC,
-                  mmnl_fit$AIC, mmnl_fit$k, dt))
-      if (!isTRUE(mmnl_fit$converged)) {
-        reason <- if (is.null(mmnl_fit$reason)) "unknown" else mmnl_fit$reason
-        cat(sprintf("  MMNL did not converge (reason: %s)\n", reason))
-        if (!is.null(mmnl_fit$apollo_log_tail)) {
+                  fit$converged, fit$LL, fit$BIC, fit$AIC, fit$k, dt))
+      if (!isTRUE(fit$converged)) {
+        reason <- if (is.null(fit$reason)) "unknown" else fit$reason
+        cat(sprintf("  MMNL (%s) did not converge (reason: %s)\n", label, reason))
+        if (!is.null(fit$apollo_log_tail)) {
           cat("  Last lines of the Apollo log:\n")
-          cat(paste0("    ", mmnl_fit$apollo_log_tail), sep = "\n")
+          cat(paste0("    ", fit$apollo_log_tail), sep = "\n")
           cat("\n")
         }
-        if (!is.null(mmnl_fit$apollo_log_path)) {
-          cat(sprintf("  Full Apollo log: %s\n", mmnl_fit$apollo_log_path))
+        if (!is.null(fit$apollo_log_path)) {
+          cat(sprintf("  Full Apollo log: %s\n", fit$apollo_log_path))
         }
       }
     }
-    if (!is.null(mmnl_fit) && "1" %in% names(results)) {
-      mnl <- results[["1"]]
-      comparison_df <- data.frame(
-        model = c("MNL (C=1)",
-                  sprintf("LCMNL (C=%d, BIC-best)", best_C),
-                  "MMNL (independent normals)"),
-        LL  = c(mnl$LL,  best$LL,  mmnl_fit$LL),
-        k   = c(mnl$k,   best$k,   mmnl_fit$k),
-        BIC = c(mnl$BIC, best$BIC, mmnl_fit$BIC),
-        AIC = c(mnl$AIC, best$AIC, mmnl_fit$AIC),
+    fit
+  }
+
+  mmnl_fit      <- NULL
+  mmnl_corr_fit <- NULL
+  comparison_df <- NULL
+  if (run_mmnl)      mmnl_fit      <- .fit_mmnl_flavour("independent normals", estimate_mmnl)
+  if (run_mmnl_corr) mmnl_corr_fit <- .fit_mmnl_flavour("correlated normals",  estimate_mmnl_corr)
+
+  if ((!is.null(mmnl_fit) || !is.null(mmnl_corr_fit)) && "1" %in% names(results)) {
+    mnl <- results[["1"]]
+    rows <- list()
+    rows[[length(rows) + 1L]] <- data.frame(
+      model = "MNL (C=1)", LL = mnl$LL, k = mnl$k,
+      BIC = mnl$BIC, AIC = mnl$AIC, stringsAsFactors = FALSE
+    )
+    rows[[length(rows) + 1L]] <- data.frame(
+      model = sprintf("LCMNL (C=%d, BIC-best)", best_C),
+      LL = best$LL, k = best$k, BIC = best$BIC, AIC = best$AIC,
+      stringsAsFactors = FALSE
+    )
+    if (!is.null(mmnl_fit)) {
+      rows[[length(rows) + 1L]] <- data.frame(
+        model = "MMNL (independent normals)",
+        LL = mmnl_fit$LL, k = mmnl_fit$k,
+        BIC = mmnl_fit$BIC, AIC = mmnl_fit$AIC,
         stringsAsFactors = FALSE
       )
-      comparison_df$dBIC <- comparison_df$BIC - min(comparison_df$BIC)
     }
+    if (!is.null(mmnl_corr_fit)) {
+      rows[[length(rows) + 1L]] <- data.frame(
+        model = "MMNL (correlated normals)",
+        LL = mmnl_corr_fit$LL, k = mmnl_corr_fit$k,
+        BIC = mmnl_corr_fit$BIC, AIC = mmnl_corr_fit$AIC,
+        stringsAsFactors = FALSE
+      )
+    }
+    comparison_df <- do.call(rbind, rows)
+    comparison_df$dBIC <- comparison_df$BIC - min(comparison_df$BIC)
   }
 
   if (write_csv) {
@@ -687,6 +723,7 @@ run_lcmnl_workflow <- function(database = NULL,
     dgp         = dgp,
     lcmnl       = results,
     mmnl        = mmnl_fit,
+    mmnl_corr   = mmnl_corr_fit,
     summary     = summary_df,
     class_betas = betas_df,
     comparison  = comparison_df,

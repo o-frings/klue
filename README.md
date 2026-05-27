@@ -111,7 +111,8 @@ Three CSVs are written to `output/` by default (override with `output_dir`):
 | `scalings = list(time = 60, ...)` | Per-attribute scaling (e.g. seconds → minutes). |
 | `avail_col` (long) / `availability` (wide) | Drop tasks where some alternative is unavailable. |
 | `C_cands = 1:4` | Pick a different range of class counts. |
-| `run_mmnl = FALSE` | Skip the MMNL benchmark (faster). |
+| `run_mmnl = FALSE` | Skip the independent-normals MMNL benchmark (faster). |
+| `run_mmnl_corr = TRUE` | Additionally estimate a correlated-normals MMNL (full Cholesky covariance). Slower; tests whether heterogeneity is genuinely correlated across attributes. |
 | `output_prefix = "myrun"` | Prefix for the output CSV filenames. |
 | `output_dir = "results"` | Write CSVs somewhere other than `output/`. |
 | `write_csv = FALSE` | Return results in memory only. |
