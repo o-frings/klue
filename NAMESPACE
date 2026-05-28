@@ -15,6 +15,20 @@ export(klue_simulate)         # synthetic panel choice data
 export(klue_simulate_cov)     # ... with concomitant covariates
 export(klue_simulate_deff)    # ... with D-efficient design
 
+# --- Simulation-study drivers (paper replication) ---------------------------
+export(klue_study)                # runs all 11 drivers below (Frings 2026 study)
+export(klue_study_main)           # 420-condition Monte Carlo (true_K x kappa x sigma)
+export(klue_study_mmnl)           # LCMNL vs MMNL on continuous vs discrete DGPs
+export(klue_study_convergence)    # multistart vs random-start ablation
+export(klue_study_initialisation) # RP signatures vs one-hot feature ablation
+export(klue_study_unbalanced)     # unbalanced class-size robustness
+export(klue_study_design)         # random vs D-efficient design
+export(klue_study_concomitant)    # covariate-dependent class membership
+export(klue_study_recovery)       # unconditional parameter-recovery RMSE
+export(klue_study_clustering)     # which clustering method wins
+export(klue_study_sample)         # vary N and T
+export(klue_study_mmnl_corr)      # correlated-MMNL robustness
+
 # --- Backward-compat aliases (deprecated; same function objects) ------------
 export(run_lcmnl_workflow)
 export(build_database)
@@ -27,6 +41,18 @@ export(estimate_mmnl_corr)
 export(generate_data)
 export(generate_data_with_covariates)
 export(generate_data_defficient)
+export(run_full_study)
+export(run_main_simulation)
+export(run_mmnl_comparison)
+export(run_convergence_ablation)
+export(run_initialisation_ablation)
+export(run_unbalanced_analysis)
+export(run_design_comparison)
+export(run_concomitant_analysis)
+export(run_unconditional_recovery)
+export(run_clustering_comparison)
+export(run_sample_sensitivity)
+export(run_correlated_mmnl_robustness)
 
 import(apollo)
 importFrom(mclust, Mclust, mclustBIC)

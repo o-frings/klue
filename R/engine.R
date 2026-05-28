@@ -544,16 +544,16 @@ cleanup_apollo <- function() {
                   "klue_simulate_deff",
                   "estimate_lcmnl", "klue_lcmnl", "klue_mmnl",
                   "compute_onehot_features", "get_all_starts_onehot",
-                  "estimate_lcmnl_multistart_onehot", "run_initialisation_ablation",
+                  "estimate_lcmnl_multistart_onehot", "klue_study_initialisation",
                   "compute_ari", "compute_recovery",
-                  "run_main_simulation", "summarise_main_results",
-                  "run_mmnl_comparison", "run_convergence_ablation",
-                  "run_sample_sensitivity", "run_correlated_mmnl_robustness",
+                  "klue_study_main", "summarise_main_results",
+                  "klue_study_mmnl", "klue_study_convergence",
+                  "klue_study_sample", "klue_study_mmnl_corr",
                   "klue_mmnl_corr", ".run_apollo_mmnl_corr",
-                  "run_unbalanced_analysis",
-                  "run_design_comparison", "run_concomitant_analysis",
-                  "run_unconditional_recovery", "run_clustering_comparison",
-                  "run_full_study")
+                  "klue_study_unbalanced",
+                  "klue_study_design", "klue_study_concomitant",
+                  "klue_study_recovery", "klue_study_clustering",
+                  "klue_study")
   to_remove <- setdiff(unique(to_remove), protected)
   if (length(to_remove) > 0) rm(list = to_remove, envir = .GlobalEnv)
 }
@@ -1370,7 +1370,7 @@ compute_recovery <- function(true_betas, est_betas) {
 # SECTION 6: MAIN SIMULATION
 # =============================================================================
 
-run_main_simulation <- function(true_K_values = c(1, 2, 3, 4, 5),
+klue_study_main <- function(true_K_values = c(1, 2, 3, 4, 5),
                                 kappa_values  = c(0.5, 0.75, 1.0, 1.25, 1.5),
                                 sigma_values  = c(0.1, 0.15, 0.2, 0.25),
                                 n_reps = 5, C_cands = 1:6,
@@ -1510,7 +1510,7 @@ summarise_main_results <- function(df) {
 # SECTION 7: MMNL COMPARISON
 # =============================================================================
 
-run_mmnl_comparison <- function(n_cond = 80, n_draws = N_DRAWS_MMNL,
+klue_study_mmnl <- function(n_cond = 80, n_draws = N_DRAWS_MMNL,
                                 C_cands = 1:5, verbose = TRUE,
                                 dgp = DGP_DEFAULT) {
   # K=1: pure continuous heterogeneity (no segments); kappa irrelevant, fix at 0.
@@ -1632,7 +1632,7 @@ run_mmnl_comparison <- function(n_cond = 80, n_draws = N_DRAWS_MMNL,
 # SECTION 8: SUPPLEMENTARY ANALYSES
 # =============================================================================
 
-run_convergence_ablation <- function(n_random = 50, n_cond = 40, verbose = TRUE,
+klue_study_convergence <- function(n_random = 50, n_cond = 40, verbose = TRUE,
                                      dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 1: CONVERGENCE ====\n")
   conds <- expand.grid(true_K = c(3, 4, 5), kappa = c(0.50, 0.75, 1.00),
@@ -1712,7 +1712,7 @@ run_convergence_ablation <- function(n_random = 50, n_cond = 40, verbose = TRUE,
 # Three-arm initialisation ablation: RP contrasts vs one-hot choice indicators
 # vs uninformed random starts, on the H1 convergence design. The "global"
 # log-likelihood for a condition is the max across all three arms (within tol).
-run_initialisation_ablation <- function(n_random = 50, n_cond = 40,
+klue_study_initialisation <- function(n_random = 50, n_cond = 40,
                                         verbose = TRUE, dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== INITIALISATION ABLATION (RP / one-hot / random) ====\n")
   conds <- expand.grid(true_K = c(3, 4, 5), kappa = c(0.50, 0.75, 1.00),
@@ -1804,7 +1804,7 @@ run_initialisation_ablation <- function(n_random = 50, n_cond = 40,
   df
 }
 
-run_unbalanced_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
+klue_study_unbalanced <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 3: UNBALANCED ====\n")
   configs <- list(
     list(name = "balanced", props = c(1/3, 1/3, 1/3)),
@@ -1845,7 +1845,7 @@ run_unbalanced_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   data.frame(config = config_names, accuracy = accuracies)
 }
 
-run_design_comparison <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
+klue_study_design <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 4: D-EFFICIENT ====\n")
   conds <- expand.grid(true_K = c(2, 3), kappa = c(0.75, 1.0), rep = 1:5)
 
@@ -1878,7 +1878,7 @@ run_design_comparison <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   data.frame(random = 100 * rok / nrow(conds), deff = 100 * dok / nrow(conds))
 }
 
-run_concomitant_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
+klue_study_concomitant <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 5: CONCOMITANT ====\n")
   conds <- expand.grid(true_K = c(2, 3), kappa = c(0.75, 1.0, 1.25),
                        cs = c(0.5, 1.0, 1.5), rep = 1:3)
@@ -1916,7 +1916,7 @@ run_concomitant_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   data.frame(accuracy = 100 * ok / nrow(conds), mean_ari = mean(aris))
 }
 
-run_unconditional_recovery <- function(n_cond = 80, verbose = TRUE,
+klue_study_recovery <- function(n_cond = 80, verbose = TRUE,
                                        dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 6: RECOVERY ====\n")
   conds <- expand.grid(true_K = c(2, 3, 4), kappa = c(0.75, 1.0, 1.25),
@@ -1953,7 +1953,7 @@ run_unconditional_recovery <- function(n_cond = 80, verbose = TRUE,
 }
 
 # --- SUPP 7: Clustering Method Comparison ---
-run_clustering_comparison <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
+klue_study_clustering <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 7: CLUSTERING METHODS ====\n")
 
   method_names <- c("kmeans", "gmm", "hc_ward", "hc_complete", "hc_average", "pam")
@@ -2058,7 +2058,7 @@ run_clustering_comparison <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
 }
 
 # --- SUPP 8: Sample Size and Panel Length Sensitivity ---
-run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
+klue_study_sample <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 8: SAMPLE SIZE / PANEL LENGTH ====\n")
 
   T_values   <- c(8L, 12L, 20L)
@@ -2344,7 +2344,7 @@ klue_mmnl_corr <- function(database,
                        n_cores = n_cores))
 }
 
-run_correlated_mmnl_robustness <- function(n_draws = N_DRAWS_MMNL, verbose = TRUE,
+klue_study_mmnl_corr <- function(n_draws = N_DRAWS_MMNL, verbose = TRUE,
                                             dgp = DGP_DEFAULT) {
   if (verbose) cat("\n==== SUPP 9: CORRELATED MMNL ROBUSTNESS ====\n")
 
@@ -2443,54 +2443,54 @@ run_correlated_mmnl_robustness <- function(n_draws = N_DRAWS_MMNL, verbose = TRU
 # SECTION 9: MASTER EXECUTION
 # =============================================================================
 
-run_full_study <- function(run_main = TRUE, run_mmnl = TRUE, run_supp = TRUE,
+klue_study <- function(run_main = TRUE, run_mmnl = TRUE, run_supp = TRUE,
                            verbose = TRUE, dgp = DGP_DEFAULT) {
   results <- list()
   t_start <- Sys.time()
 
   if (run_main) {
-    results[["main"]] <- run_main_simulation(verbose = verbose, dgp = dgp)
+    results[["main"]] <- klue_study_main(verbose = verbose, dgp = dgp)
     summarise_main_results(results[["main"]])
     write.csv(results[["main"]], file.path(OUTPUT_DIR, "main_results.csv"),
               row.names = FALSE)
   }
 
   if (run_mmnl) {
-    results[["mmnl"]] <- run_mmnl_comparison(verbose = verbose, dgp = dgp)
+    results[["mmnl"]] <- klue_study_mmnl(verbose = verbose, dgp = dgp)
     write.csv(results[["mmnl"]], file.path(OUTPUT_DIR, "mmnl_results.csv"),
               row.names = FALSE)
   }
 
   if (run_supp) {
-    results[["convergence"]] <- run_convergence_ablation(verbose = verbose, dgp = dgp)
+    results[["convergence"]] <- klue_study_convergence(verbose = verbose, dgp = dgp)
     write.csv(results[["convergence"]],
               file.path(OUTPUT_DIR, "convergence_results.csv"), row.names = FALSE)
 
-    results[["unbalanced"]] <- run_unbalanced_analysis(verbose = verbose, dgp = dgp)
+    results[["unbalanced"]] <- klue_study_unbalanced(verbose = verbose, dgp = dgp)
     write.csv(results[["unbalanced"]],
               file.path(OUTPUT_DIR, "unbalanced_results.csv"), row.names = FALSE)
 
-    results[["design"]] <- run_design_comparison(verbose = verbose, dgp = dgp)
+    results[["design"]] <- klue_study_design(verbose = verbose, dgp = dgp)
     write.csv(results[["design"]],
               file.path(OUTPUT_DIR, "design_results.csv"), row.names = FALSE)
 
-    results[["concomitant"]] <- run_concomitant_analysis(verbose = verbose, dgp = dgp)
+    results[["concomitant"]] <- klue_study_concomitant(verbose = verbose, dgp = dgp)
     write.csv(results[["concomitant"]],
               file.path(OUTPUT_DIR, "concomitant_results.csv"), row.names = FALSE)
 
-    results[["recovery"]] <- run_unconditional_recovery(verbose = verbose, dgp = dgp)
+    results[["recovery"]] <- klue_study_recovery(verbose = verbose, dgp = dgp)
     write.csv(results[["recovery"]],
               file.path(OUTPUT_DIR, "recovery_results.csv"), row.names = FALSE)
 
-    results[["clustering"]] <- run_clustering_comparison(verbose = verbose, dgp = dgp)
+    results[["clustering"]] <- klue_study_clustering(verbose = verbose, dgp = dgp)
     write.csv(results[["clustering"]],
               file.path(OUTPUT_DIR, "clustering_comparison_results.csv"), row.names = FALSE)
 
-    results[["sample_sens"]] <- run_sample_sensitivity(verbose = verbose, dgp = dgp)
+    results[["sample_sens"]] <- klue_study_sample(verbose = verbose, dgp = dgp)
     write.csv(results[["sample_sens"]],
               file.path(OUTPUT_DIR, "sample_sensitivity_results.csv"), row.names = FALSE)
 
-    results[["mmnl_corr"]] <- run_correlated_mmnl_robustness(verbose = verbose, dgp = dgp)
+    results[["mmnl_corr"]] <- klue_study_mmnl_corr(verbose = verbose, dgp = dgp)
     write.csv(results[["mmnl_corr"]],
               file.path(OUTPUT_DIR, "mmnl_correlated_results.csv"), row.names = FALSE)
   }
@@ -2502,7 +2502,7 @@ run_full_study <- function(run_main = TRUE, run_mmnl = TRUE, run_supp = TRUE,
 }
 
 # Package version: simulation auto-run block intentionally removed.
-# Users can call run_full_study() / run_main_simulation() directly if needed.
+# Users can call klue_study() / klue_study_main() directly if needed.
 
 # =============================================================================
 # Backward-compatibility aliases.
@@ -2520,3 +2520,17 @@ estimate_mmnl_corr        <- klue_mmnl_corr
 generate_data                 <- klue_simulate
 generate_data_with_covariates <- klue_simulate_cov
 generate_data_defficient      <- klue_simulate_deff
+
+# Simulation-driver aliases
+run_full_study                 <- klue_study
+run_main_simulation            <- klue_study_main
+run_mmnl_comparison            <- klue_study_mmnl
+run_convergence_ablation       <- klue_study_convergence
+run_initialisation_ablation    <- klue_study_initialisation
+run_unbalanced_analysis        <- klue_study_unbalanced
+run_design_comparison          <- klue_study_design
+run_concomitant_analysis       <- klue_study_concomitant
+run_unconditional_recovery     <- klue_study_recovery
+run_clustering_comparison      <- klue_study_clustering
+run_sample_sensitivity         <- klue_study_sample
+run_correlated_mmnl_robustness <- klue_study_mmnl_corr

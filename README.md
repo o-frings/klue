@@ -103,6 +103,13 @@ Variants: `klue_simulate_cov()` (with concomitant covariates driving
 class membership) and `klue_simulate_deff()` (D-efficient design).
 Full reference: `?klue_simulate`.
 
+The full Monte Carlo study from Frings (2026) is also reproducible via
+`klue_study()` — runs the 420-condition main simulation plus 10
+robustness analyses (~12 hours). Each component is also callable
+on its own: `klue_study_main()`, `klue_study_unbalanced()`,
+`klue_study_design()`, `klue_study_clustering()`, etc. See
+`?klue_study`.
+
 ---
 
 ## 3. Inspect the results
