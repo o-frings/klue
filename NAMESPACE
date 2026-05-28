@@ -11,6 +11,9 @@ export(klue_lcmnl)            # LCMNL multistart estimator
 export(klue_mmnl)             # MMNL estimator (independent normals)
 export(klue_mmnl_corr)        # MMNL estimator (correlated normals)
 export(klue_mmnl_defaults)    # MMNL tuning defaults
+export(klue_simulate)         # synthetic panel choice data
+export(klue_simulate_cov)     # ... with concomitant covariates
+export(klue_simulate_deff)    # ... with D-efficient design
 
 # --- Backward-compat aliases (deprecated; same function objects) ------------
 export(run_lcmnl_workflow)
@@ -21,6 +24,9 @@ export(make_dgp_config)
 export(estimate_lcmnl_multistart)
 export(estimate_mmnl)
 export(estimate_mmnl_corr)
+export(generate_data)
+export(generate_data_with_covariates)
+export(generate_data_defficient)
 
 import(apollo)
 importFrom(mclust, Mclust, mclustBIC)

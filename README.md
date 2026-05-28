@@ -85,6 +85,26 @@ length-J vector or named list in wide).
 
 ---
 
+## 2b. Simulate data instead (Monte Carlo / methodology testing)
+
+The data-generating process used in the Frings (2026) Monte Carlo study
+is also exposed:
+
+```r
+sim <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = 2,
+                     separation = 1.0, heterogeneity = 0.25, seed = 42)
+
+# Returned: sim$database (canonical wide format) + sim$true_betas, sim$true_class
+res <- klue(database = sim$database, C_cands = 1:4)
+res$best_C    # should recover 2 here
+```
+
+Variants: `klue_simulate_cov()` (with concomitant covariates driving
+class membership) and `klue_simulate_deff()` (D-efficient design).
+Full reference: `?klue_simulate`.
+
+---
+
 ## 3. Inspect the results
 
 ```r

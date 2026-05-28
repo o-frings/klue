@@ -138,7 +138,7 @@ klue_mmnl_defaults <- function() {
 # SECTION 1: DATA GENERATION
 # =============================================================================
 
-generate_data <- function(N_per_class = 150, T_tasks = 20, true_K = 2,
+klue_simulate <- function(N_per_class = 150, T_tasks = 20, true_K = 2,
                           separation = 1.0, heterogeneity = 0.25,
                           seed = 12345, class_proportions = NULL,
                           dgp = DGP_DEFAULT, sep_profile = NULL) {
@@ -202,7 +202,7 @@ generate_data <- function(N_per_class = 150, T_tasks = 20, true_K = 2,
        dgp = dgp)
 }
 
-generate_data_with_covariates <- function(N_per_class = 150, T_tasks = 20,
+klue_simulate_cov <- function(N_per_class = 150, T_tasks = 20,
                                           true_K = 2, separation = 1.0,
                                           heterogeneity = 0.25, seed = 12345,
                                           covariate_strength = 1.0,
@@ -261,7 +261,7 @@ generate_data_with_covariates <- function(N_per_class = 150, T_tasks = 20,
        Z1 = Z1, Z2 = Z2, dgp = dgp)
 }
 
-generate_data_defficient <- function(N_per_class = 150, T_tasks = 20,
+klue_simulate_deff <- function(N_per_class = 150, T_tasks = 20,
                                      true_K = 2, separation = 1.0,
                                      heterogeneity = 0.25, seed = 12345,
                                      dgp = DGP_DEFAULT) {
@@ -540,8 +540,8 @@ cleanup_apollo <- function() {
                   "get_hc_average_starts", "get_pam_starts", "get_all_starts",
                   "generate_segment_deviations",
                   "make_apollo_lcPars", "make_apollo_probabilities_lc",
-                  "generate_data", "generate_data_with_covariates",
-                  "generate_data_defficient",
+                  "klue_simulate", "klue_simulate_cov",
+                  "klue_simulate_deff",
                   "estimate_lcmnl", "klue_lcmnl", "klue_mmnl",
                   "compute_onehot_features", "get_all_starts_onehot",
                   "estimate_lcmnl_multistart_onehot", "run_initialisation_ablation",
@@ -1400,7 +1400,7 @@ run_main_simulation <- function(true_K_values = c(1, 2, 3, 4, 5),
     seed <- as.integer(1000 * tK + 100 * (kap * 100) + 10 * (sig * 100) + rp)
 
     npc <- if (tK == 1L) 300L else 150L
-    data <- generate_data(N_per_class = npc, T_tasks = 20, true_K = tK,
+    data <- klue_simulate(N_per_class = npc, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp, sep_profile = sep_profile)
 
@@ -1531,7 +1531,7 @@ run_mmnl_comparison <- function(n_cond = 80, n_draws = N_DRAWS_MMNL,
     sig <- conds$sigma[i]; rp <- conds$rep[i]
     seed <- as.integer(1000 * tK + 100 * (kap * 100) + 10 * (sig * 100) + rp)
     npc <- if (tK == 1L) 300L else 150L
-    data <- generate_data(N_per_class = npc, T_tasks = 20, true_K = tK,
+    data <- klue_simulate(N_per_class = npc, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
     mnl_bic <- Inf  # C=1 result, i.e. standard MNL
@@ -1566,7 +1566,7 @@ run_mmnl_comparison <- function(n_cond = 80, n_draws = N_DRAWS_MMNL,
     if (verbose) cat(sprintf("  [%2d/%d] K=%d kappa=%.2f sigma=%.2f ... ", i, nc, lr$tK, lr$kap, lr$sig))
 
     # Regenerate data with same seed for MMNL
-    data <- generate_data(N_per_class = lr$npc, T_tasks = 20, true_K = lr$tK,
+    data <- klue_simulate(N_per_class = lr$npc, T_tasks = 20, true_K = lr$tK,
                           separation = lr$kap, heterogeneity = lr$sig, seed = lr$seed,
                           dgp = dgp)
     mm <- klue_mmnl(data$database, n_draws = n_draws, dgp = dgp)
@@ -1644,7 +1644,7 @@ run_convergence_ablation <- function(n_random = 50, n_cond = 40, verbose = TRUE,
     sig <- conds$sigma[i]; rp <- conds$rep[i]
     seed <- as.integer(1000 * tK + 100 * (kap * 100) + 10 * (sig * 100) + rp)
 
-    data <- generate_data(N_per_class = 150, T_tasks = 20, true_K = tK,
+    data <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
 
@@ -1724,7 +1724,7 @@ run_initialisation_ablation <- function(n_random = 50, n_cond = 40,
     sig <- conds$sigma[i]; rp <- conds$rep[i]
     seed <- as.integer(1000 * tK + 100 * (kap * 100) + 10 * (sig * 100) + rp)
 
-    data <- generate_data(N_per_class = 150, T_tasks = 20, true_K = tK,
+    data <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
 
@@ -1821,7 +1821,7 @@ run_unbalanced_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
     kap <- conds$kappa[all_jobs$cond_i[row]]
     rp  <- conds$rep[all_jobs$cond_i[row]]
     seed <- as.integer(3000 + 1000 * ci + 100 * (kap * 100) + rp)
-    data <- generate_data(N_per_class = 150, T_tasks = 20, true_K = 3,
+    data <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = 3,
                           separation = kap, heterogeneity = 0.2, seed = seed,
                           class_proportions = cfg$props, dgp = dgp)
     bics <- rep(Inf, 5)
@@ -1852,10 +1852,10 @@ run_design_comparison <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
   .run_one_design <- function(i) {
     tK <- conds$true_K[i]; kap <- conds$kappa[i]; rp <- conds$rep[i]
     seed <- as.integer(4000 + 100 * tK + 10 * (kap * 100) + rp)
-    dr <- generate_data(N_per_class = 150, T_tasks = 20, true_K = tK,
+    dr <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = tK,
                         separation = kap, heterogeneity = 0.2, seed = seed,
                         dgp = dgp)
-    dd <- generate_data_defficient(N_per_class = 150, T_tasks = 20, true_K = tK,
+    dd <- klue_simulate_deff(N_per_class = 150, T_tasks = 20, true_K = tK,
                                    separation = kap, heterogeneity = 0.2, seed = seed,
                                    dgp = dgp)
     br <- rep(Inf, 5); bd <- rep(Inf, 5)
@@ -1887,7 +1887,7 @@ run_concomitant_analysis <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
     tK <- conds$true_K[i]; kap <- conds$kappa[i]
     cs <- conds$cs[i]; rp <- conds$rep[i]
     seed <- as.integer(5000 + 100 * tK + 10 * (kap * 100) + rp + cs * 1000)
-    data <- generate_data_with_covariates(
+    data <- klue_simulate_cov(
       N_per_class = 150, T_tasks = 20, true_K = tK, separation = kap,
       heterogeneity = 0.2, seed = seed, covariate_strength = cs,
       dgp = dgp
@@ -1927,7 +1927,7 @@ run_unconditional_recovery <- function(n_cond = 80, verbose = TRUE,
     tK <- conds$true_K[i]; kap <- conds$kappa[i]
     sig <- conds$sigma[i]; rp <- conds$rep[i]
     seed <- as.integer(1000 * tK + 100 * (kap * 100) + 10 * (sig * 100) + rp)
-    data <- generate_data(N_per_class = 150, T_tasks = 20, true_K = tK,
+    data <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
     m <- klue_lcmnl(data$database, tK, dgp = dgp)
@@ -1966,7 +1966,7 @@ run_clustering_comparison <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
     sig <- conds$sigma[i]; rp <- conds$rep[i]
     seed <- as.integer(6000 + 1000 * tK + 100 * (kap * 100) + 10 * (sig * 100) + rp)
 
-    data <- generate_data(N_per_class = 150, T_tasks = 20, true_K = tK,
+    data <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
 
@@ -2077,7 +2077,7 @@ run_sample_sensitivity <- function(verbose = TRUE, dgp = DGP_DEFAULT) {
     i   <- all_jobs$cond_i[row]
     tK <- conds$true_K[i]; kap <- conds$kappa[i]; rp <- conds$rep[i]
     seed <- as.integer(7000 + 100 * tK + 10 * (kap * 100) + rp + Tv * 100 + Npc)
-    data <- generate_data(N_per_class = Npc, T_tasks = Tv, true_K = tK,
+    data <- klue_simulate(N_per_class = Npc, T_tasks = Tv, true_K = tK,
                           separation = kap, heterogeneity = 0.2, seed = seed,
                           dgp = dgp)
     bics <- rep(Inf, 5)
@@ -2365,7 +2365,7 @@ run_correlated_mmnl_robustness <- function(n_draws = N_DRAWS_MMNL, verbose = TRU
     sig <- conds$sigma[i]; rp <- conds$rep[i]
     seed <- as.integer(1000 * tK + 100 * (kap * 100) + 10 * (sig * 100) + rp)
     npc <- if (tK == 1L) 300L else 150L
-    data <- generate_data(N_per_class = npc, T_tasks = 20, true_K = tK,
+    data <- klue_simulate(N_per_class = npc, T_tasks = 20, true_K = tK,
                           separation = kap, heterogeneity = sig, seed = seed,
                           dgp = dgp)
     best_lc_bic <- Inf; best_lc_C <- NA_integer_
@@ -2392,7 +2392,7 @@ run_correlated_mmnl_robustness <- function(n_draws = N_DRAWS_MMNL, verbose = TRU
 
     if (verbose) cat(sprintf("  [%2d/%d] K=%d kappa=%.2f sigma=%.2f ... ", i, nc, lr$tK, lr$kap, lr$sig))
 
-    data <- generate_data(N_per_class = lr$npc, T_tasks = 20, true_K = lr$tK,
+    data <- klue_simulate(N_per_class = lr$npc, T_tasks = 20, true_K = lr$tK,
                           separation = lr$kap, heterogeneity = lr$sig, seed = lr$seed,
                           dgp = dgp)
 
@@ -2515,3 +2515,8 @@ make_dgp_config           <- klue_dgp
 estimate_lcmnl_multistart <- klue_lcmnl
 estimate_mmnl             <- klue_mmnl
 estimate_mmnl_corr        <- klue_mmnl_corr
+
+# Data-generation aliases
+generate_data                 <- klue_simulate
+generate_data_with_covariates <- klue_simulate_cov
+generate_data_defficient      <- klue_simulate_deff
