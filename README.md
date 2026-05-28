@@ -15,7 +15,7 @@ install.packages("klue",
                            "https://cloud.r-project.org"))
 ```
 
-(Or from a tarball: `install.packages("klue_0.1.0.tar.gz", repos = NULL, type = "source")`.)
+(Or from a tarball: `install.packages("klue_<version>.tar.gz", repos = NULL, type = "source")`.)
 
 ---
 
