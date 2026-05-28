@@ -1,61 +1,88 @@
 citHeader(
-  "To cite klue in publications, please cite the klue paper and the underlying packages it builds on (Apollo for estimation; mclust and cluster for two of the six clustering-based starting values):"
+  "To cite klue in publications, please cite the methodology paper, the software itself, and the upstream packages it builds on:"
 )
 
+# meta$Version is supplied by R at runtime from DESCRIPTION; meta$Date may be
+# NULL if not set, so we fall back to the current year.
+pkg_ver  <- meta$Version
+pkg_year <- if (!is.null(meta$Date)) sub("-.*$", "", meta$Date) else format(Sys.Date(), "%Y")
+
 c(
+  # 1. Methodology paper
   bibentry(
-    bibtype  = "Unpublished",
-    title    = "A Hybrid Machine Learning and Random Utility Framework for Latent Class Model Specification",
-    author   = person("Oliver", "Frings"),
-    year     = 2026,
-    note     = "Working paper. R package klue, version 0.2.0.",
+    bibtype     = "Unpublished",
+    title       = "A Hybrid Machine Learning and Random Utility Framework for Latent Class Model Specification",
+    author      = person("Oliver", "Frings"),
+    year        = 2026,
+    note        = "Working paper",
     textVersion =
       paste("Frings, O. (2026).",
             "A Hybrid Machine Learning and Random Utility Framework for",
             "Latent Class Model Specification.",
             "Working paper.")
   ),
+  # 2. Software citation (version auto-updates from meta$Version)
   bibentry(
-    bibtype  = "Article",
-    title    = "Apollo: a flexible, powerful and customisable freeware package for choice model estimation and application",
-    author   = c(person("Stephane", "Hess"), person("David", "Palma")),
-    journal  = "Journal of Choice Modelling",
-    year     = 2019,
-    volume   = 32,
-    pages    = "100170",
-    doi      = "10.1016/j.jocm.2019.100170",
+    bibtype     = "Manual",
+    title       = paste0("klue: Hybrid Machine Learning and Random-Utility ",
+                         "Workflow for Latent Class Multinomial Logit Model ",
+                         "Specification"),
+    author      = person("Oliver", "Frings"),
+    year        = pkg_year,
+    note        = sprintf("R package version %s", pkg_ver),
+    url         = "https://github.com/o-frings/klue",
+    textVersion =
+      sprintf(paste("Frings, O. (%s). klue: Hybrid Machine Learning and",
+                    "Random-Utility Workflow for Latent Class Multinomial",
+                    "Logit Model Specification.",
+                    "R package version %s.",
+                    "https://github.com/o-frings/klue"),
+              pkg_year, pkg_ver)
+  ),
+  # 3. Apollo (the underlying estimator)
+  bibentry(
+    bibtype     = "Article",
+    title       = "Apollo: a flexible, powerful and customisable freeware package for choice model estimation and application",
+    author      = c(person("Stephane", "Hess"), person("David", "Palma")),
+    journal     = "Journal of Choice Modelling",
+    year        = 2019,
+    volume      = 32,
+    pages       = "100170",
+    doi         = "10.1016/j.jocm.2019.100170",
     textVersion =
       paste("Hess, S., & Palma, D. (2019).",
             "Apollo: a flexible, powerful and customisable freeware package",
             "for choice model estimation and application.",
             "Journal of Choice Modelling, 32, 100170.")
   ),
+  # 4. mclust (one of the six clustering starts)
   bibentry(
-    bibtype  = "Article",
-    title    = "mclust 5: clustering, classification and density estimation using Gaussian finite mixture models",
-    author   = c(person("Luca", "Scrucca"), person("Michael", "Fop"),
-                 person(c("T.", "Brendan"), "Murphy"),
-                 person(c("Adrian", "E."), "Raftery")),
-    journal  = "The R Journal",
-    year     = 2016,
-    volume   = 8,
-    number   = 1,
-    pages    = "289-317",
-    doi      = "10.32614/RJ-2016-021",
+    bibtype     = "Article",
+    title       = "mclust 5: clustering, classification and density estimation using Gaussian finite mixture models",
+    author      = c(person("Luca", "Scrucca"), person("Michael", "Fop"),
+                    person(c("T.", "Brendan"), "Murphy"),
+                    person(c("Adrian", "E."), "Raftery")),
+    journal     = "The R Journal",
+    year        = 2016,
+    volume      = 8,
+    number      = 1,
+    pages       = "289-317",
+    doi         = "10.32614/RJ-2016-021",
     textVersion =
       paste("Scrucca, L., Fop, M., Murphy, T.B., & Raftery, A.E. (2016).",
             "mclust 5: clustering, classification and density estimation",
             "using Gaussian finite mixture models.",
             "The R Journal, 8(1), 289-317.")
   ),
+  # 5. cluster (one of the six clustering starts)
   bibentry(
-    bibtype  = "Manual",
-    title    = "cluster: Cluster Analysis Basics and Extensions",
-    author   = c(person("Martin", "Maechler"), person("Peter", "Rousseeuw"),
-                 person("Anja", "Struyf"), person("Mia", "Hubert"),
-                 person("Kurt", "Hornik")),
-    year     = 2024,
-    note     = "R package",
+    bibtype     = "Manual",
+    title       = "cluster: Cluster Analysis Basics and Extensions",
+    author      = c(person("Martin", "Maechler"), person("Peter", "Rousseeuw"),
+                    person("Anja", "Struyf"), person("Mia", "Hubert"),
+                    person("Kurt", "Hornik")),
+    year        = 2024,
+    note        = "R package",
     textVersion =
       paste("Maechler, M., Rousseeuw, P., Struyf, A., Hubert, M., Hornik, K. (2024).",
             "cluster: Cluster Analysis Basics and Extensions. R package.")

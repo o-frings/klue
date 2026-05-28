@@ -165,11 +165,14 @@ bit-exactly through this workflow against hand-coded baselines. See
 
 ## Citing
 
-If you use klue in published work, please cite the klue paper **and** the
-packages it builds on:
+If you use klue in published work, please cite **the methodology paper,
+the software itself, and the upstream packages it builds on**:
 
 - Frings, O. (2026). *A Hybrid Machine Learning and Random Utility Framework
   for Latent Class Model Specification*. Working paper.
+- Frings, O. (2026). *klue: Hybrid Machine Learning and Random-Utility
+  Workflow for Latent Class Multinomial Logit Model Specification*.
+  R package. https://github.com/o-frings/klue
 - Hess, S., & Palma, D. (2019). *Apollo: a flexible, powerful and
   customisable freeware package for choice model estimation and
   application*. Journal of Choice Modelling, 32, 100170.
@@ -182,7 +185,7 @@ packages it builds on:
   *cluster: Cluster Analysis Basics and Extensions*. R package.
 
 ```r
-citation("klue")    # returns all four BibTeX entries
+citation("klue")    # returns all five BibTeX entries (auto-updates version)
 ```
 
 ## Acknowledgements

@@ -707,14 +707,15 @@ klue <- function(database = NULL,
                   output_dir))
     }
     if (!isTRUE(getOption("klue.suppress_citation", FALSE))) {
-      cat("\n--- Please cite klue and the packages it builds on ---\n")
+      pkg_ver <- as.character(utils::packageVersion("klue"))
+      cat("\n--- Please cite klue if you use it in published work ---\n")
       cat("  Frings (2026). A Hybrid Machine Learning and Random Utility\n")
-      cat("    Framework for Latent Class Model Specification.\n")
-      cat("    Working paper.\n")
-      cat("  Hess & Palma (2019). Apollo. J. Choice Modelling, 32, 100170.\n")
-      cat("  Scrucca et al. (2016). mclust 5. The R Journal, 8(1), 289-317.\n")
-      cat("  Maechler et al. (2024). cluster: Cluster Analysis Basics and Extensions.\n")
-      cat("\n  citation(\"klue\")  # full BibTeX bundle\n")
+      cat("    Framework for Latent Class Model Specification. Working paper.\n")
+      cat(sprintf("  Frings (2026). klue: R package version %s.\n", pkg_ver))
+      cat("    https://github.com/o-frings/klue\n")
+      cat("\n  Plus the upstream packages: apollo (Hess & Palma 2019),\n")
+      cat("  mclust (Scrucca et al. 2016), cluster (Maechler et al.).\n")
+      cat("  citation(\"klue\")  # full BibTeX bundle\n")
     }
   }
 
