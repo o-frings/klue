@@ -1,0 +1,39 @@
+{
+  "title": "klue: Hybrid Machine Learning and Random-Utility Workflow for Latent Class Multinomial Logit Model Specification",
+  "description": "An R package implementing the three-step workflow from Frings (2026, working paper) for specifying latent class multinomial logit (LCMNL) models. The maximum-likelihood multi-start is initialised from six clusterings of respondents' revealed-preference signatures (k-means, Gaussian mixture, hierarchical clustering with Ward / complete / average linkage, and partitioning around medoids); LCMNL is estimated across a user-specified range of class counts; and a mixed multinomial logit (MMNL) benchmark is reported alongside BIC, AIC, ICL, and a classification-entropy diagnostic. Accepts long- or wide-format discrete-choice data with optional availability columns. Validated against five public reference datasets (Vittel water-quality DCE, Apollo mode and route choice, Electricity, Swissmetro). Wraps the apollo package for maximum-likelihood estimation.",
+  "creators": [
+    {
+      "name": "Frings, Oliver",
+      "affiliation": "Universite de Lorraine, Universite de Strasbourg, AgroParisTech, CNRS, INRAE, BETA; Climate Economics Chair; University of Cambridge"
+    }
+  ],
+  "upload_type": "software",
+  "license": "MIT",
+  "keywords": [
+    "latent class model",
+    "multinomial logit",
+    "discrete choice",
+    "mixed logit",
+    "MMNL",
+    "LCMNL",
+    "machine learning",
+    "clustering",
+    "Monte Carlo simulation",
+    "preference heterogeneity",
+    "model specification",
+    "R package"
+  ],
+  "related_identifiers": [
+    {
+      "scheme": "url",
+      "identifier": "https://github.com/o-frings/klue",
+      "relation": "isSupplementTo"
+    },
+    {
+      "scheme": "url",
+      "identifier": "https://o-frings.r-universe.dev/klue",
+      "relation": "isAlternateIdentifier"
+    }
+  ],
+  "access_right": "open"
+}

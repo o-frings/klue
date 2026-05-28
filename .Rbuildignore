@@ -3,3 +3,5 @@
 ^\.git$
 ^\.gitignore$
 ^\.DS_Store$
+^\.zenodo\.json$
+^CITATION\.cff$

@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use klue in published work, please cite both the methodology paper and the software."
+title: "klue: Hybrid Machine Learning and Random-Utility Workflow for Latent Class Multinomial Logit Model Specification"
+abstract: "An R package implementing the three-step workflow from Frings (2026) for specifying latent class multinomial logit (LCMNL) models: cluster-based initialisation of the maximum-likelihood multi-start, LCMNL estimation across class counts, and MMNL benchmarking with BIC, AIC, ICL, and classification-entropy diagnostics."
+type: software
+authors:
+  - family-names: Frings
+    given-names: Oliver
+    email: oliver.frings@agroparistech.fr
+    affiliation: "Universite de Lorraine, Universite de Strasbourg, AgroParisTech, CNRS, INRAE, BETA; Climate Economics Chair; University of Cambridge"
+version: 0.6.3
+date-released: "2026-05-28"
+license: MIT
+repository-code: "https://github.com/o-frings/klue"
+url: "https://o-frings.r-universe.dev/klue"
+keywords:
+  - latent class model
+  - multinomial logit
+  - discrete choice
+  - mixed logit
+  - machine learning
+  - clustering
+  - Monte Carlo simulation
+preferred-citation:
+  type: unpublished
+  title: "A Hybrid Machine Learning and Random Utility Framework for Latent Class Model Specification"
+  authors:
+    - family-names: Frings
+      given-names: Oliver
+  year: 2026
+  notes: "Working paper"
