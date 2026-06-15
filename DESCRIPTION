@@ -2,7 +2,7 @@ Package: klue
 Type: Package
 Title: Hybrid Machine Learning and Random-Utility Workflow for Latent
     Class Multinomial Logit Model Specification
-Version: 0.6.3
+Version: 0.9.0
 Authors@R: person("Oliver", "Frings",
                   email = "oliver.frings@agroparistech.fr",
                   role = c("aut", "cre"))
@@ -18,9 +18,8 @@ Description: Implements the three-step workflow from Frings (2026,
     and a mixed multinomial logit (MMNL) benchmark is reported alongside
     BIC, AIC, ICL, and a classification-entropy diagnostic. Accepts
     long- or wide-format discrete-choice data with optional availability
-    columns. Validated against five public reference datasets (Vittel,
-    Apollo mode and route choice, Electricity, Swissmetro). Wraps the
-    'apollo' package for maximum-likelihood estimation.
+    columns. This is the 0.9 rewrite of the 0.6.x engine: same exported
+    API and numerical behaviour, about 40 percent of the code.
 License: MIT + file LICENSE
 URL: https://github.com/o-frings/klue
 BugReports: https://github.com/o-frings/klue/issues
@@ -33,8 +32,10 @@ Imports:
     mclust,
     cluster,
     stats,
-    utils
+    utils,
+    parallel
 Suggests:
+    idefix,
     mlogit,
     testthat
-RoxygenNote: 7.3.0
+RoxygenNote: 7.2.3
