@@ -8,8 +8,8 @@ authors:
     given-names: Oliver
     email: oliver.frings@agroparistech.fr
     affiliation: "Universite de Lorraine, Universite de Strasbourg, AgroParisTech, CNRS, INRAE, BETA; Climate Economics Chair; University of Cambridge"
-version: 0.9.0
-date-released: "2026-06-15"
+version: 0.9.2
+date-released: "2026-07-09"
 license: MIT
 repository-code: "https://github.com/o-frings/klue"
 url: "https://o-frings.r-universe.dev/klue"

@@ -125,10 +125,13 @@ cleanup_apollo <- function() {
     intraNormDraws = c()
   )
   probabilities <- .make_apollo_prob_mmnl(dgp)
+  # register cleanup BEFORE the global assignment so an error anywhere below
+  # cannot leak apollo_probabilities into the caller's global environment
+  on.exit(cleanup_apollo(), add = TRUE)
   assign("apollo_probabilities", probabilities, envir = .GlobalEnv)
 
   inputs <- tryCatch(
-    apollo_validateInputs(
+    apollo::apollo_validateInputs(
       apollo_beta      = start_beta,
       apollo_fixed     = c(),
       database         = database,
@@ -152,7 +155,7 @@ cleanup_apollo <- function() {
   if (!is.null(bounds)) est_settings$bounds <- bounds
 
   tryCatch(
-    apollo_estimate(
+    apollo::apollo_estimate(
       apollo_beta          = start_beta,
       apollo_fixed         = c(),
       apollo_probabilities = probabilities,
@@ -220,6 +223,10 @@ klue_mmnl <- function(database,
                       mu_price_bounds    = NULL,
                       sigma_price_bounds = NULL,
                       dgp                = DGP_DEFAULT) {
+  if (!requireNamespace("apollo", quietly = TRUE)) {
+    stop("klue_mmnl requires the 'apollo' package (Suggests since 0.9.2); ",
+         "install it with install.packages(\"apollo\")", call. = FALSE)
+  }
   d <- klue_mmnl_defaults()
   if (is.null(n_draws))            n_draws            <- d$n_draws
   if (is.null(n_draws_stage1))     n_draws_stage1     <- d$n_draws_stage1
@@ -312,8 +319,17 @@ klue_mmnl <- function(database,
     if (!is.null(mnl_fit) && mnl_fit$converged) {
       mnl_b <- mnl_fit$betas[1, ]
       for (a in 1:n_generic) beta0[paste0("mu_x", a)] <- mnl_b[a]
-      beta0["mu_price"] <- if (mnl_b[n_beta] < 0) log(-mnl_b[n_beta]) else 0.0
+      if (is.finite(mnl_b[n_beta]) && mnl_b[n_beta] < 0) {
+        beta0["mu_price"] <- log(-mnl_b[n_beta])
+      } else {
+        warning("klue_mmnl: pooled-MNL price coefficient is ",
+                signif(mnl_b[n_beta], 3), " (expected negative); ",
+                "starting mu_price at 0 instead", call. = FALSE)
+        beta0["mu_price"] <- 0.0
+      }
     } else {
+      warning("klue_mmnl: pooled-MNL warm start failed to converge; ",
+              "using flat starting values", call. = FALSE)
       for (a in 1:n_generic) beta0[paste0("mu_x", a)] <- 0.5
       beta0["mu_price"] <- 0.0
     }
@@ -330,6 +346,9 @@ klue_mmnl <- function(database,
       mu_starts  <- unname(indep_fit$mu)
       sig_starts <- log(unname(indep_fit$sigma))
     } else {
+      warning("klue_mmnl: independent warm-start fit failed (",
+              indep_fit$reason, "); correlated model starts from flat values",
+              call. = FALSE)
       mu_starts  <- c(rep(0.5, n_generic), 0.0)
       sig_starts <- rep(log(0.5), n_beta)
     }
@@ -352,9 +371,13 @@ klue_mmnl <- function(database,
                              bounds = make_bounds(beta0),
                              correlation = correlation)
   beta1 <- beta0
-  if (!is.null(stage1) && !is.null(stage1$estimate)) {
+  s1_reason <- NULL
+  if (is.null(stage1) || is.null(stage1$estimate)) {
+    s1_reason <- "stage-1 estimation failed"
+  } else {
     est_s1 <- stage1$estimate
     ok <- all(is.finite(est_s1))
+    if (!ok) s1_reason <- "non-finite stage-1 estimates"
     if (ok && !correlation) {
       # Reject stage-1 estimates pinned to a bound (failed convergence sign).
       bnd <- make_bounds(beta0)
@@ -364,9 +387,14 @@ klue_mmnl <- function(database,
         slack <- 1e-3 * rng
         ok <- all(est_s1 >= bnd$lower + slack & est_s1 <= bnd$upper - slack,
                   na.rm = TRUE)
+        if (!ok) s1_reason <- "stage-1 estimates pinned to a bound"
       }
     }
     if (ok) beta1 <- est_s1
+  }
+  if (!is.null(s1_reason)) {
+    message("klue_mmnl: ", s1_reason,
+            "; stage 2 starts from the initial values instead")
   }
 
   # ---- Stage 2: main estimation ---------------------------------------------

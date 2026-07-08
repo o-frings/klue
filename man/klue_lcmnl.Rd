@@ -10,7 +10,8 @@ klue_lcmnl(
   dgp = DGP_DEFAULT,
   estimator = c("ml", "em"),
   feature_type = c("rp", "onehot"),
-  n_cores = 1L
+  n_cores = 1L,
+  screen = getOption("klue.screen", TRUE)
 )
 }
 \arguments{
@@ -34,6 +35,17 @@ dimensions (\code{n_alternatives}, \code{n_beta}, \code{n_generic},
 best-of-six selection is order-deterministic and so is independent of
 \code{n_cores}. Leave at 1 inside the study drivers, which already
 parallelise across conditions -- nesting would oversubscribe the cores.}
+
+\item{screen}{logical; the 0.9.1 fast-screening behaviour (default). With
+the \code{"ml"} estimator the six starts are screened at the loose
+tolerance and only the winner is polished; the cluster-wise MNL start
+fits also run loose (see \code{\link{klue_starts}}). \code{FALSE}
+restores the pre-0.9.1 path end to end: tight cluster-MNL start fits,
+every start estimated at full precision, no polish. The default reads
+\code{getOption("klue.screen", TRUE)}, so
+\code{options(klue.screen = FALSE)} restores the old path in every
+caller (\code{klue()}, the study drivers, and the start generators)
+without changing call sites.}
 }
 \value{
 The best-fitting per-start result, a list with the same fields as
@@ -49,5 +61,13 @@ The best-fitting per-start result, a list with the same fields as
 }
 \description{
 For C = 1 (MNL) a single run suffices; for C >= 2 the model is estimated
-from all six clustering starts and the best converged log-likelihood wins.
+from all six clustering starts and the best log-likelihood wins. With the
+\code{"ml"} estimator the starts are screened at a loose tolerance
+(\code{maxit = 200}, \code{reltol = 1e-6}; fits hitting the cap still
+count) and only the winner is polished to full precision, warm-started
+from its own solution. Set \code{screen = FALSE} (or session-wide
+\code{options(klue.screen = FALSE)}) to fit every start at full precision
+with no polish step -- the pre-0.9.1 code path, kept for exact
+reproduction of results produced with it. Each start logs its LL and
+elapsed time via \code{message()}.
 }

@@ -9,7 +9,10 @@ estimate_lcmnl(
   C,
   start_betas = NULL,
   start_shares = NULL,
-  dgp = DGP_DEFAULT
+  dgp = DGP_DEFAULT,
+  maxit = MAX_ITER,
+  reltol = 1e-10,
+  start_par = NULL
 )
 }
 \arguments{
@@ -29,6 +32,13 @@ If \code{NULL}, equal shares (\code{1 / C}) are used.}
 \item{dgp}{Data-generating-process specification list giving the design
 dimensions (\code{n_alternatives}, \code{n_beta}, \code{n_generic},
 \code{n_asc}, \code{npc}). Defaults to \code{DGP_DEFAULT}.}
+
+\item{maxit, reltol}{BFGS iteration cap and relative tolerance. The defaults
+fit to full precision; the multistart screen passes looser values.}
+
+\item{start_par}{Optional full starting parameter vector (betas, ASCs, and
+share deltas as one vector), used to warm-start from a previous fit.
+Overrides \code{start_betas}/\code{start_shares}.}
 }
 \value{
 A list with the fit. \code{converged} (logical) flags a successful
@@ -37,11 +47,13 @@ A list with the fit. \code{converged} (logical) flags a successful
   information criteria (\code{ICL_BIC} is the entropy penalty
   \code{ICL - BIC}); \code{k} the number of free parameters; \code{betas} a
   \code{C} x \code{n_beta} matrix of estimated taste coefficients;
-  \code{class_probs} the length-\code{C} class shares; and \code{posteriors}
-  the \code{N} x \code{C} matrix of posterior class-membership probabilities.
-  \code{model_type} is \code{"MNL"} when \code{C = 1} and \code{"LCMNL"}
-  otherwise. A failed fit returns the same fields with \code{converged} set
-  to \code{FALSE}.
+  \code{class_probs} the length-\code{C} class shares; \code{posteriors}
+  the \code{N} x \code{C} matrix of posterior class-membership
+  probabilities; and \code{par} the full parameter vector (reusable as
+  \code{start_par}). \code{model_type} is \code{"MNL"} when \code{C = 1} and
+  \code{"LCMNL"} otherwise. A fit that hits \code{maxit} returns its
+  (finite) values with \code{converged = FALSE}; an optimiser error returns
+  the failure skeleton with \code{LL = -Inf}.
 }
 \description{
 BFGS on the full parameter vector with analytic gradients. Bypasses Apollo

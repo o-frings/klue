@@ -10,7 +10,9 @@ klue_starts(
   method = "kmeans",
   features = NULL,
   feature_type = c("rp", "onehot"),
-  dgp = DGP_DEFAULT
+  dgp = DGP_DEFAULT,
+  cluster_cap = 2000L,
+  screen = getOption("klue.screen", TRUE)
 )
 }
 \arguments{
@@ -31,6 +33,15 @@ features are computed from `database` according to `feature_type`.}
 
 \item{dgp}{data-generating-process specification supplying dimensions such
 as the number of alternatives, coefficients, and generic coefficients.}
+
+\item{cluster_cap}{maximum number of respondents used for clustering and
+the cluster-wise MNL start fits; larger samples are subsampled with a
+fixed seed. Ignored when `features` is supplied.}
+
+\item{screen}{logical; fit the cluster-wise MNLs at a loose tolerance,
+keeping non-converged finite-LL fits (the default, since 0.9.1).
+\code{FALSE} restores the pre-0.9.1 path: tight fits, fallback on
+non-convergence. Default reads \code{getOption("klue.screen", TRUE)}.}
 }
 \value{
 A list with `betas` (a C-by-n_beta matrix of class-wise starting

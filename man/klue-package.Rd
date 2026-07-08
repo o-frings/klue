@@ -11,7 +11,8 @@ from six clusterings of respondents' revealed-preference signatures; LCMNL
 estimation across a range of class counts; and a mixed multinomial logit
 benchmark, reported with BIC, AIC, ICL, and a classification-entropy
 diagnostic. The 0.9 series is a rewrite of the 0.6.x engine with the same
-exported API and numerical behaviour.
+exported API. The MMNL benchmark requires the suggested 'apollo' package;
+everything else runs without it.
 }
 \details{
 Start with \code{\link{klue_demo}} for a zero-setup example, then

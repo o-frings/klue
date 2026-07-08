@@ -972,7 +972,6 @@ klue_study_sample <- function(verbose = TRUE, dgp = DGP_DEFAULT, blocked = FALSE
   }
 
   res_list <- .study_mclapply(nrow(all_jobs), .run_one, n_cores)
-  grid <- expand.grid(Npc = Npc_values, Tv = T_values)[, 2:1]
   grid <- data.frame(Tv = rep(T_values, each = length(Npc_values)),
                      Npc = rep(Npc_values, times = length(T_values)))
   accs <- vapply(seq_len(nrow(grid)), function(g) {

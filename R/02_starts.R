@@ -45,6 +45,32 @@ compute_onehot_features <- function(database, dgp = DGP_DEFAULT) {
   features
 }
 
+# Evaluate expr under a fixed seed, then restore the caller's RNG state:
+# deterministic clustering/start generation must not silently reset or
+# advance the caller's random-number stream.
+.with_seed <- function(seed, expr) {
+  old <- if (exists(".Random.seed", envir = globalenv(), inherits = FALSE))
+    get(".Random.seed", envir = globalenv()) else NULL
+  on.exit({
+    if (is.null(old)) {
+      if (exists(".Random.seed", envir = globalenv(), inherits = FALSE))
+        rm(".Random.seed", envir = globalenv())
+    } else assign(".Random.seed", old, envir = globalenv())
+  }, add = TRUE)
+  set.seed(seed)
+  expr
+}
+
+# Starting values are heuristic, but pam, Mclust, and hclust are O(N^2) or
+# worse: at large N they dominate the whole estimation. Cluster a fixed-seed
+# respondent subsample instead; the resulting starts feed the full-data fit.
+.cluster_subsample <- function(database, cap) {
+  ids <- unique(database$ID)
+  if (length(ids) <= cap) return(database)
+  keep <- ids[sort(.with_seed(123, sample.int(length(ids), cap)))]
+  database[database$ID %in% keep, , drop = FALSE]
+}
+
 standardise_features <- function(features) {
   mu <- colMeans(features); sigma <- apply(features, 2, sd)
   sigma[sigma == 0] <- 1
@@ -55,7 +81,12 @@ standardise_features <- function(features) {
 
 # Fit a separate MNL (C=1) per cluster: starting values directly in
 # coefficient space rather than heuristically scaled centroids.
-fit_cluster_mnls <- function(labels, database, dgp = DGP_DEFAULT) {
+# screen = TRUE (the 0.9.1 default) fits each cluster MNL at a loose
+# tolerance and keeps non-converged finite-LL fits -- starting values only
+# need to be roughly right. screen = FALSE restores the pre-0.9.1 path
+# exactly: tight fits, fallback on non-convergence.
+fit_cluster_mnls <- function(labels, database, dgp = DGP_DEFAULT,
+                             screen = getOption("klue.screen", TRUE)) {
   C <- max(labels)
   all_ids <- unique(database$ID)
   n_beta <- dgp$n_beta
@@ -66,16 +97,31 @@ fit_cluster_mnls <- function(labels, database, dgp = DGP_DEFAULT) {
 
   for (cc in 1:C) {
     cluster_ids <- all_ids[labels == cc]
-    if (length(cluster_ids) < 3) { betas[cc, ] <- fallback; next }
+    if (length(cluster_ids) < 3) {
+      message("[klue_starts] cluster ", cc, " has only ", length(cluster_ids),
+              " respondent(s); using fallback start coefficients")
+      betas[cc, ] <- fallback; next
+    }
     db_sub <- database[database$ID %in% cluster_ids, , drop = FALSE]
     db_sub$ID <- match(db_sub$ID, cluster_ids)
     mnl_fit <- tryCatch(
-      estimate_lcmnl(db_sub, C = 1,
-                     start_betas = matrix(0, 1, n_beta), dgp = dgp),
+      if (isTRUE(screen))
+        estimate_lcmnl(db_sub, C = 1, start_betas = matrix(0, 1, n_beta),
+                       dgp = dgp, maxit = 200L, reltol = 1e-6)
+      else
+        estimate_lcmnl(db_sub, C = 1, start_betas = matrix(0, 1, n_beta),
+                       dgp = dgp),
       error = function(e) NULL
     )
-    betas[cc, ] <- if (!is.null(mnl_fit) && mnl_fit$converged)
-      mnl_fit$betas[1, ] else fallback
+    keep <- if (isTRUE(screen)) !is.null(mnl_fit) && is.finite(mnl_fit$LL)
+            else !is.null(mnl_fit) && isTRUE(mnl_fit$converged)
+    if (keep) {
+      betas[cc, ] <- mnl_fit$betas[1, ]
+    } else {
+      message("[klue_starts] cluster ", cc,
+              " MNL start fit failed; using fallback start coefficients")
+      betas[cc, ] <- fallback
+    }
   }
   list(betas = betas, shares = shares)
 }
@@ -87,22 +133,16 @@ KLUE_CLUSTER_METHODS <- c("kmeans", "gmm", "hc_ward", "hc_complete",
 # in 0.6.x (set.seed(123) immediately before the call).
 .cluster_labels <- function(method, scaled, C) {
   switch(method,
-    kmeans = {
-      set.seed(123)
-      kmeans(scaled, centers = C, nstart = 25, iter.max = 100)$cluster
-    },
+    kmeans = .with_seed(123,
+      kmeans(scaled, centers = C, nstart = 25, iter.max = 100)$cluster),
     gmm = {
-      set.seed(123)
-      g <- mclust::Mclust(scaled, G = C, verbose = FALSE)
+      g <- .with_seed(123, mclust::Mclust(scaled, G = C, verbose = FALSE))
       if (is.null(g)) NULL else g$classification
     },
     hc_ward     = cutree(hclust(dist(scaled), method = "ward.D2"), k = C),
     hc_complete = cutree(hclust(dist(scaled), method = "complete"), k = C),
     hc_average  = cutree(hclust(dist(scaled), method = "average"), k = C),
-    pam = {
-      set.seed(123)
-      cluster::pam(scaled, k = C)$clustering
-    },
+    pam = .with_seed(123, cluster::pam(scaled, k = C)$clustering),
     stop("Unknown clustering method: ", method)
   )
 }
@@ -125,33 +165,48 @@ KLUE_CLUSTER_METHODS <- c("kmeans", "gmm", "hc_ward", "hc_complete",
 #'   "onehot" (choice indicators; the ablation arm).
 #' @param dgp data-generating-process specification supplying dimensions such
 #'   as the number of alternatives, coefficients, and generic coefficients.
+#' @param cluster_cap maximum number of respondents used for clustering and
+#'   the cluster-wise MNL start fits; larger samples are subsampled with a
+#'   fixed seed. Ignored when `features` is supplied.
+#' @param screen logical; fit the cluster-wise MNLs at a loose tolerance,
+#'   keeping non-converged finite-LL fits (the default, since 0.9.1).
+#'   \code{FALSE} restores the pre-0.9.1 path: tight fits, fallback on
+#'   non-convergence. Default reads \code{getOption("klue.screen", TRUE)}.
 #' @return A list with `betas` (a C-by-n_beta matrix of class-wise starting
 #'   coefficients) and `shares` (a length-C vector of class shares), or NULL if
 #'   the chosen clustering method failed to return labels.
 #' @export
 klue_starts <- function(database, C, method = "kmeans", features = NULL,
-                        feature_type = c("rp", "onehot"), dgp = DGP_DEFAULT) {
+                        feature_type = c("rp", "onehot"), dgp = DGP_DEFAULT,
+                        cluster_cap = 2000L,
+                        screen = getOption("klue.screen", TRUE)) {
   feature_type <- match.arg(feature_type)
   if (is.null(features)) {
+    database <- .cluster_subsample(database, cluster_cap)
     features <- if (feature_type == "rp") compute_rp_features(database, dgp)
                 else compute_onehot_features(database, dgp)
   }
-  if (C == 1) return(fit_cluster_mnls(rep(1L, nrow(features)), database, dgp))
+  if (C == 1) return(fit_cluster_mnls(rep(1L, nrow(features)), database, dgp,
+                                      screen = screen))
   sf <- standardise_features(features)
   labels <- .cluster_labels(method, sf$scaled, C)
   if (is.null(labels)) return(NULL)
-  fit_cluster_mnls(labels, database, dgp)
+  fit_cluster_mnls(labels, database, dgp, screen = screen)
 }
 
 # All six methods, computing the feature matrix once. NULL entries mark
 # methods that errored (the multistart skips them).
 get_all_starts <- function(database, C, dgp = DGP_DEFAULT,
-                           feature_type = c("rp", "onehot")) {
+                           feature_type = c("rp", "onehot"),
+                           cluster_cap = 2000L,
+                           screen = getOption("klue.screen", TRUE)) {
   feature_type <- match.arg(feature_type)
+  database <- .cluster_subsample(database, cluster_cap)
   features <- if (feature_type == "rp") compute_rp_features(database, dgp)
               else compute_onehot_features(database, dgp)
   sapply(KLUE_CLUSTER_METHODS, function(m) {
-    tryCatch(klue_starts(database, C, m, features = features, dgp = dgp),
+    tryCatch(klue_starts(database, C, m, features = features, dgp = dgp,
+                         screen = screen),
              error = function(e) NULL)
   }, simplify = FALSE)
 }
@@ -170,15 +225,14 @@ get_mnl_perturbation_starts <- function(database, C, n_starts = 50L,
   b_price <- beta_hat[n_beta]
   if (!is.finite(b_price) || b_price >= 0) b_price <- -abs(dgp$beta_bar[n_beta])
 
-  lapply(seq_len(n_starts), function(s) {
-    set.seed(seed * 100000L + s)
+  lapply(seq_len(n_starts), function(s) .with_seed(seed * 100000L + s, {
     bs <- matrix(0, C, n_beta)
     for (ci in 1:C) {
       bs[ci, 1:n_generic] <- b_gen + rnorm(n_generic, 0, jitter_sd)
       bs[ci, n_beta] <- b_price * exp(rnorm(1, 0, jitter_sd))
     }
     list(betas = bs, shares = rep(1 / C, C))
-  })
+  }))
 }
 
 # Random-partition starts: what Stata lclogit/Latent GOLD do by default --
@@ -187,8 +241,7 @@ get_mnl_perturbation_starts <- function(database, C, n_starts = 50L,
 get_random_partition_starts <- function(database, C, n_starts = 50L,
                                         seed = 1L, dgp = DGP_DEFAULT) {
   N <- length(unique(database$ID))
-  lapply(seq_len(n_starts), function(s) {
-    set.seed(seed * 100000L + 50000L + s)
+  lapply(seq_len(n_starts), function(s) .with_seed(seed * 100000L + 50000L + s, {
     labels <- sample.int(C, N, replace = TRUE)
     tries <- 0L
     while (any(tabulate(labels, C) < 3L) && tries < 20L) {
@@ -196,5 +249,5 @@ get_random_partition_starts <- function(database, C, n_starts = 50L,
     }
     st <- fit_cluster_mnls(labels, database, dgp = dgp)
     list(betas = st$betas, shares = st$shares)
-  })
+  }))
 }

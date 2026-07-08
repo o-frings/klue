@@ -20,7 +20,10 @@ compute_recovery <- function(true_betas, est_betas) {
     diffs <- true_betas - est_betas
     return(list(rmse = sqrt(mean(diffs^2)), bias = mean(diffs)))
   }
-  # Optimal label permutation by exhaustive search (fine for K <= 8)
+  # Optimal label permutation by exhaustive search: the K^K enumeration
+  # below explodes past K = 8 (9^9 = 387M rows), so refuse loudly.
+  if (K > 8) stop("compute_recovery: exhaustive permutation matching supports ",
+                  "K <= 8; got K = ", K)
   perms <- as.matrix(expand.grid(rep(list(1:K), K)))
   perms <- perms[apply(perms, 1, function(p) length(unique(p)) == K), , drop = FALSE]
   costs <- apply(perms, 1, function(p) sum((true_betas - est_betas[p, , drop = FALSE])^2))

@@ -64,7 +64,7 @@ build_design_matrices <- function(database, dgp = DGP_DEFAULT) {
 .panel_sum <- function(x, ctx) colSums(matrix(x, ctx$T_per_n, ctx$N))
 
 # Single-class (optionally row-weighted) MNL fit via BFGS.
-.fit_mnl <- function(ctx, par0, rw = NULL) {
+.fit_mnl <- function(ctx, par0, rw = NULL, maxit = MAX_ITER, reltol = 1e-10) {
   neg_ll <- function(par) {
     tll <- .mnl_eval(ctx, par)$tll
     if (is.null(rw)) -sum(tll) else -sum(rw * tll)
@@ -76,7 +76,7 @@ build_design_matrices <- function(database, dgp = DGP_DEFAULT) {
     else c(-colSums(rw * s$beta), -colSums(rw * s$asc))
   }
   suppressWarnings(optim(par0, neg_ll, gr = grad_ll, method = "BFGS",
-                         control = list(maxit = MAX_ITER, reltol = 1e-10)))
+                         control = list(maxit = maxit, reltol = reltol)))
 }
 
 # Per-respondent panel log-likelihood matrix (N x C) for stacked parameters.
@@ -121,53 +121,72 @@ build_design_matrices <- function(database, dgp = DGP_DEFAULT) {
 #' @param dgp Data-generating-process specification list giving the design
 #'   dimensions (\code{n_alternatives}, \code{n_beta}, \code{n_generic},
 #'   \code{n_asc}, \code{npc}). Defaults to \code{DGP_DEFAULT}.
+#' @param maxit,reltol BFGS iteration cap and relative tolerance. The defaults
+#'   fit to full precision; the multistart screen passes looser values.
+#' @param start_par Optional full starting parameter vector (betas, ASCs, and
+#'   share deltas as one vector), used to warm-start from a previous fit.
+#'   Overrides \code{start_betas}/\code{start_shares}.
 #' @return A list with the fit. \code{converged} (logical) flags a successful
 #'   optimisation; \code{C} is the number of classes; \code{LL} the maximised
 #'   log-likelihood; \code{BIC}, \code{AIC}, and \code{ICL} the corresponding
 #'   information criteria (\code{ICL_BIC} is the entropy penalty
 #'   \code{ICL - BIC}); \code{k} the number of free parameters; \code{betas} a
 #'   \code{C} x \code{n_beta} matrix of estimated taste coefficients;
-#'   \code{class_probs} the length-\code{C} class shares; and \code{posteriors}
-#'   the \code{N} x \code{C} matrix of posterior class-membership probabilities.
-#'   \code{model_type} is \code{"MNL"} when \code{C = 1} and \code{"LCMNL"}
-#'   otherwise. A failed fit returns the same fields with \code{converged} set
-#'   to \code{FALSE}.
+#'   \code{class_probs} the length-\code{C} class shares; \code{posteriors}
+#'   the \code{N} x \code{C} matrix of posterior class-membership
+#'   probabilities; and \code{par} the full parameter vector (reusable as
+#'   \code{start_par}). \code{model_type} is \code{"MNL"} when \code{C = 1} and
+#'   \code{"LCMNL"} otherwise. A fit that hits \code{maxit} returns its
+#'   (finite) values with \code{converged = FALSE}; an optimiser error returns
+#'   the failure skeleton with \code{LL = -Inf}.
 #' @export
 estimate_lcmnl <- function(database, C, start_betas = NULL, start_shares = NULL,
-                           dgp = DGP_DEFAULT) {
+                           dgp = DGP_DEFAULT, maxit = MAX_ITER,
+                           reltol = 1e-10, start_par = NULL) {
   ctx <- .lcmnl_context(database, dgp)
   N <- ctx$N; npc <- ctx$npc; n_beta <- ctx$n_beta; n_asc <- ctx$n_asc
 
-  if (is.null(start_betas)) {
-    starts <- klue_starts(database, C, "kmeans", dgp = dgp)
-    start_betas  <- starts$betas
-    start_shares <- starts$shares
+  if (is.null(start_par)) {
+    if (is.null(start_betas)) {
+      starts <- klue_starts(database, C, "kmeans", dgp = dgp)
+      start_betas  <- starts$betas
+      start_shares <- starts$shares
+    }
+    if (is.null(start_shares)) start_shares <- rep(1 / C, C)
   }
-  if (is.null(start_shares)) start_shares <- rep(1 / C, C)
 
   fail_result <- .lcmnl_fail(C, N, n_beta)
 
   if (C == 1) {
-    par0 <- c(start_betas[1, ], rep(0, n_asc))
+    par0 <- if (!is.null(start_par)) start_par
+            else c(start_betas[1, ], rep(0, n_asc))
     n_free <- npc
-    result <- tryCatch(.fit_mnl(ctx, par0), error = function(e) {
+    result <- tryCatch(.fit_mnl(ctx, par0, maxit = maxit, reltol = reltol),
+                       error = function(e) {
       message("[MNL] optim error: ", conditionMessage(e)); NULL
     })
-    if (is.null(result) || result$convergence != 0) return(fail_result)
+    if (is.null(result) || !result$convergence %in% c(0L, 1L))
+      return(fail_result)
     LL <- -result$value
     BIC <- -2 * LL + n_free * log(N)
-    return(list(converged = TRUE, C = 1L, model_type = "MNL",
+    return(list(converged = result$convergence == 0L, C = 1L,
+                model_type = "MNL",
                 LL = LL, BIC = BIC, AIC = -2 * LL + 2 * n_free,
                 ICL = BIC, ICL_BIC = 0, k = n_free,
                 betas = matrix(result$par[1:n_beta], nrow = 1),
-                class_probs = 1, posteriors = matrix(1, nrow = N, ncol = 1)))
+                class_probs = 1, posteriors = matrix(1, nrow = N, ncol = 1),
+                par = result$par))
   }
 
-  par0 <- numeric(C * npc + C - 1L)
-  for (ci in 1:C) par0[(ci - 1L) * npc + 1:n_beta] <- start_betas[ci, ]
-  for (ci in 1:(C - 1L)) {
-    par0[C * npc + ci] <- log(max(start_shares[ci], 0.01) /
-                              max(start_shares[C], 0.01))
+  if (!is.null(start_par)) {
+    par0 <- start_par
+  } else {
+    par0 <- numeric(C * npc + C - 1L)
+    for (ci in 1:C) par0[(ci - 1L) * npc + 1:n_beta] <- start_betas[ci, ]
+    for (ci in 1:(C - 1L)) {
+      par0[C * npc + ci] <- log(max(start_shares[ci], 0.01) /
+                                max(start_shares[C], 0.01))
+    }
   }
   n_free <- C * npc + C - 1L
 
@@ -207,12 +226,13 @@ estimate_lcmnl <- function(database, C, start_betas = NULL, start_shares = NULL,
 
   result <- tryCatch(
     suppressWarnings(optim(par0, neg_ll, gr = grad_ll, method = "BFGS",
-                           control = list(maxit = MAX_ITER, reltol = 1e-10))),
+                           control = list(maxit = maxit, reltol = reltol))),
     error = function(e) {
       message("[LCMNL C=", C, "] optim error: ", conditionMessage(e)); NULL
     }
   )
-  if (is.null(result) || result$convergence != 0) return(fail_result)
+  if (is.null(result) || !result$convergence %in% c(0L, 1L))
+    return(fail_result)
 
   p <- result$par
   LL <- -result$value
@@ -229,11 +249,11 @@ estimate_lcmnl <- function(database, C, start_betas = NULL, start_shares = NULL,
   H <- -sum(posteriors_c * log(posteriors_c))
   BIC <- -2 * LL + n_free * log(N)
 
-  list(converged = TRUE, C = C, model_type = "LCMNL",
+  list(converged = result$convergence == 0L, C = C, model_type = "LCMNL",
        LL = LL, BIC = BIC, AIC = -2 * LL + 2 * n_free,
        ICL = BIC + 2 * H, ICL_BIC = 2 * H,
        k = n_free, betas = betas_mat, class_probs = class_probs,
-       posteriors = posteriors_c)
+       posteriors = posteriors_c, par = p)
 }
 
 #' EM estimator for the same LCMNL likelihood
@@ -315,10 +335,17 @@ estimate_lcmnl_em <- function(database, C, start_betas = NULL,
     pi_c <- pmax(colMeans(w), 1e-8); pi_c <- pi_c / sum(pi_c)
     for (ci in 1:C) {
       rw <- w[row_resp, ci]
-      if (sum(rw) < 1e-6) next   # collapsed class: keep current parameters
+      if (sum(rw) < 1e-6) {
+        message("[EM C=", C, " iter ", it, "] class ", ci,
+                " collapsed; keeping its current parameters")
+        next
+      }
       opt <- tryCatch(.fit_mnl(ctx, par_c[ci, ], rw = rw),
                       error = function(e) NULL)
-      if (!is.null(opt)) par_c[ci, ] <- opt$par
+      if (is.null(opt)) {
+        message("[EM C=", C, " iter ", it, "] M-step fit for class ", ci,
+                " errored; keeping its current parameters")
+      } else par_c[ci, ] <- opt$par
     }
   }
 
@@ -332,13 +359,22 @@ estimate_lcmnl_em <- function(database, C, start_betas = NULL,
        ICL = BIC + 2 * H, ICL_BIC = 2 * H,
        k = n_free, betas = par_c[, 1:n_beta, drop = FALSE],
        class_probs = as.numeric(pi_c), posteriors = w,
+       par = c(as.vector(t(par_c)), log(pi_c[-C] / pi_c[C])),
        em_iters = em_iters, estimator = "em")
 }
 
 #' Multi-start LCMNL: best of the six clustering initialisations
 #'
 #' For C = 1 (MNL) a single run suffices; for C >= 2 the model is estimated
-#' from all six clustering starts and the best converged log-likelihood wins.
+#' from all six clustering starts and the best log-likelihood wins. With the
+#' \code{"ml"} estimator the starts are screened at a loose tolerance
+#' (\code{maxit = 200}, \code{reltol = 1e-6}; fits hitting the cap still
+#' count) and only the winner is polished to full precision, warm-started
+#' from its own solution. Set \code{screen = FALSE} (or session-wide
+#' \code{options(klue.screen = FALSE)}) to fit every start at full precision
+#' with no polish step -- the pre-0.9.1 code path, kept for exact
+#' reproduction of results produced with it. Each start logs its LL and
+#' elapsed time via \code{message()}.
 #' @param database Data frame in long format, sorted by respondent in blocks of
 #'   \code{T_per_n} rows, with columns \code{ID}, \code{CHOICE}, and the
 #'   attribute columns named by the DGP (\code{x*_j}, \code{price_j}).
@@ -354,6 +390,16 @@ estimate_lcmnl_em <- function(database, C, start_betas = NULL,
 #'   best-of-six selection is order-deterministic and so is independent of
 #'   \code{n_cores}. Leave at 1 inside the study drivers, which already
 #'   parallelise across conditions -- nesting would oversubscribe the cores.
+#' @param screen logical; the 0.9.1 fast-screening behaviour (default). With
+#'   the \code{"ml"} estimator the six starts are screened at the loose
+#'   tolerance and only the winner is polished; the cluster-wise MNL start
+#'   fits also run loose (see \code{\link{klue_starts}}). \code{FALSE}
+#'   restores the pre-0.9.1 path end to end: tight cluster-MNL start fits,
+#'   every start estimated at full precision, no polish. The default reads
+#'   \code{getOption("klue.screen", TRUE)}, so
+#'   \code{options(klue.screen = FALSE)} restores the old path in every
+#'   caller (\code{klue()}, the study drivers, and the start generators)
+#'   without changing call sites.
 #' @return The best-fitting per-start result, a list with the same fields as
 #'   the chosen estimator (\code{estimate_lcmnl} for \code{"ml"},
 #'   \code{estimate_lcmnl_em} for \code{"em"}): \code{converged}, \code{C},
@@ -368,23 +414,44 @@ estimate_lcmnl_em <- function(database, C, start_betas = NULL,
 klue_lcmnl <- function(database, C, dgp = DGP_DEFAULT,
                        estimator = c("ml", "em"),
                        feature_type = c("rp", "onehot"),
-                       n_cores = 1L) {
+                       n_cores = 1L,
+                       screen = getOption("klue.screen", TRUE)) {
   estimator <- match.arg(estimator)
   feature_type <- match.arg(feature_type)
   fit_one <- if (estimator == "em") estimate_lcmnl_em else estimate_lcmnl
+  if (C == 1L) {                # all six clustering starts coincide at C = 1
+    res <- fit_one(database, 1L, dgp = dgp)
+    res$best_method <- "pooled"
+    res$method_results <- list(pooled = res)
+    return(res)
+  }
   all_starts <- get_all_starts(database, C, dgp = dgp,
-                               feature_type = feature_type)
+                               feature_type = feature_type, screen = screen)
   N <- length(unique(database$ID))
 
   # The six per-start fits are independent and ~90% of the runtime; optionally
   # fit them concurrently. Order is preserved so the best-of-six tie-break is
-  # identical to the sequential path.
+  # identical to the sequential path. The ml screen runs loose: only the
+  # winner gets the tight tolerance, so maxit-hit fits stay in the race.
+  # screen = FALSE fits each start tight and skips the polish (pre-0.9.1 path).
+  screen_ctl <- if (estimator == "ml" && isTRUE(screen))
+                  list(maxit = 200L, reltol = 1e-6)
+                else list()
   nm_ok <- names(all_starts)[!vapply(all_starts, is.null, logical(1))]
-  fit_start <- function(nm) tryCatch(
-    fit_one(database, C, start_betas = all_starts[[nm]]$betas,
-            start_shares = all_starts[[nm]]$shares, dgp = dgp),
-    error = function(e) NULL)
+  fit_start <- function(nm) {
+    t0 <- proc.time()[["elapsed"]]
+    res <- tryCatch(
+      do.call(fit_one, c(list(database, C, start_betas = all_starts[[nm]]$betas,
+                              start_shares = all_starts[[nm]]$shares,
+                              dgp = dgp), screen_ctl)),
+      error = function(e) NULL)
+    message(sprintf("  [klue C=%d %s/%s] LL = %s (%.1f min)", C, feature_type,
+                    nm, if (is.null(res)) "error" else sprintf("%.1f", res$LL),
+                    (proc.time()[["elapsed"]] - t0) / 60))
+    res
+  }
   fits <- if (n_cores > 1L && length(nm_ok) > 1L) {
+    invisible(gc(FALSE))   # shrink the heap the forked children inherit (COW)
     parallel::mclapply(nm_ok, fit_start, mc.cores = min(as.integer(n_cores),
                                                         length(nm_ok)))
   } else {
@@ -397,11 +464,26 @@ klue_lcmnl <- function(database, C, dgp = DGP_DEFAULT,
   method_results <- list()
   for (nm in nm_ok) {                 # sequential scan -> deterministic winner
     res <- fits[[nm]]
-    if (is.null(res)) next
+    if (!is.list(res)) {   # NULL = fit errored (logged in the worker); other
+      if (!is.null(res))   # non-lists are mclapply try-errors from dead workers
+        warning("klue_lcmnl: start '", nm, "' lost to a worker failure: ",
+                paste(as.character(res), collapse = " "), call. = FALSE)
+      next
+    }
+    if (!is.finite(res$LL)) next
     method_results[[nm]] <- res
-    if (res$converged && res$LL > best$LL) {
+    if (res$LL > best$LL) {
       best <- res
       best$best_method <- nm
+    }
+  }
+  if (estimator == "ml" && isTRUE(screen) && !is.na(best$best_method)) {
+    polished <- tryCatch(
+      estimate_lcmnl(database, C, dgp = dgp, start_par = best$par),
+      error = function(e) NULL)
+    if (!is.null(polished) && polished$converged) {
+      polished$best_method <- best$best_method
+      best <- polished
     }
   }
   best$method_results <- method_results
