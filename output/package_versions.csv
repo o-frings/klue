@@ -1,0 +1,17 @@
+"package","version","library","used_for","pinned","matches_pin","installed"
+"R","4.3.1","/Library/Frameworks/R.framework/Resources","all analyses; aarch64-apple-darwin20","4.3.1",TRUE,NA
+"klue","0.10.0","repository klue/ tree","every analysis (loaded from klue/ with pkgload::load_all)",NA,NA,NA
+"apollo","0.3.5","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","klue_mmnl() and every Apollo arm; the mode-choice and Swiss route data","0.3.5",TRUE,"2025-03-12"
+"gmnl","1.1-3.2","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","gmnl_lc arm of both stress ladders","1.1-3.2",TRUE,"2023-07-10"
+"mlogit","1.1-1","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","Electricity data",NA,NA,"2023-04-06"
+"idefix","1.1.0","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","klue_design(): the blocked D-efficient design","1.1.0",TRUE,"2025-03-18"
+"mclust","6.1.1","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","klue's Gaussian-mixture clustering start","6.1.1",TRUE,"2025-01-25"
+"cluster","2.1.4","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","klue's PAM clustering start","2.1.4",TRUE,"2023-06-16"
+"logistf","1.26.1","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","Firth regressions of enumeration accuracy (dev/run_firth_h3.R)","1.26.1",TRUE,"2025-04-16"
+"maxLik","1.5-2","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","inside Apollo: BFGS in apollo_searchStart and apollo_lcEM",NA,NA,"2023-04-06"
+"bgw","0.1.3","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","inside Apollo: the BGW optimiser of apollo_estimate",NA,NA,"2024-03-29"
+"randtoolbox","2.0.4","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","inside Apollo: MLHS and Halton draws",NA,NA,"2023-04-06"
+"numDeriv","2016.8-1.1","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","inside Apollo; dev/check_lcmnl_standard_errors.R",NA,NA,"2023-04-11"
+"pkgload","1.3.2","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","loads klue from the source tree in every script",NA,NA,"2023-04-11"
+"testthat","3.1.9","/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library","klue's unit tests only",NA,NA,"2023-06-19"
+"mlogit","1.0-3.1","~/R/oldmlogit_lib","gmnl's data preparation (gmnl 1.1-3.2 fails on mlogit >= 1.1)","1.0-3.1",TRUE,"2026-10-06"

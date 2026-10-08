@@ -1,0 +1,6 @@
+"dataset","lcmnl_C","lcmnl_BIC","best_mmnl","best_mmnl_BIC","margin","benchmark_ready","second_start","best_mmnl_after","best_mmnl_BIC_after","margin_after","M3_zero_LL","M3_replaced","M4_refit","M4_nested_ok","M1_step","M1_zero_LL","M1_replaced","M2_refit","M2_nested_ok"
+"Vittel",7,12122.7,"M3",11853.9,-268.9,TRUE,FALSE,"M3",11853.9,-268.9,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"Mode",3,10837.2,"M1",10836.2,-1,TRUE,TRUE,"M1",10834.4,-2.8,-5380.845,TRUE,TRUE,TRUE,TRUE,-5383.031,TRUE,TRUE,TRUE
+"SwissRoute",5,3027.4,"M3",2948.5,-78.9,TRUE,FALSE,"M3",2948.5,-78.9,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"Electricity",11,7745.1,"M2",7310.9,-434.2,TRUE,FALSE,"M2",7310.9,-434.2,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"Swissmetro",12,7370.1,"M4",7050.7,-319.4,TRUE,FALSE,"M4",7050.7,-319.4,NA,NA,NA,NA,NA,NA,NA,NA,NA

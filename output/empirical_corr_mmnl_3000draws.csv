@@ -1,0 +1,6 @@
+"dataset","k_indep","BIC_indep","k_corr","BIC_corr","dBIC_corr","conv"
+"Mode",11,10836.2,17,10844.8,8.6,TRUE
+"SwissRoute",9,2951.6,15,2953.4,1.8,TRUE
+"Electricity",15,7561.9,30,7308.2,-253.6,TRUE
+"Swissmetro",8,8054.9,11,8668.2,613.3,TRUE
+"Vittel",20,12378.8,56,12145.3,-233.5,TRUE

@@ -1,0 +1,21 @@
+"dataset","model","description","converged","LL","k","BIC","nested_ok","apollo_code","apollo_message","vcov_available","minutes"
+"Swissmetro","M1","independent, fixed constants",TRUE,-3814.08,8,7681.1,NA,4,"Relative function convergence",TRUE,109.5
+"Swissmetro","M2","correlated, fixed constants",TRUE,-3806.77,11,7686.4,TRUE,4,"Relative function convergence",TRUE,204.2
+"Swissmetro","M3","independent, random constants",TRUE,-3564.42,10,7195.1,NA,4,"Relative function convergence",TRUE,55.2
+"Swissmetro","M4","correlated, random constants",TRUE,-3459.12,20,7050.7,TRUE,4,"Relative function convergence",TRUE,160.6
+"Mode","M1","independent, fixed constants",TRUE,-5383.03,11,10834.4,NA,4,"Relative function convergence",TRUE,61.1
+"Mode","M2","correlated, fixed constants",TRUE,-5369.01,17,10843.7,TRUE,4,"Relative function convergence",TRUE,121.4
+"Mode","M3","independent, random constants",TRUE,-5380.84,14,10848.7,NA,4,"Relative function convergence",TRUE,109.4
+"Mode","M4","correlated, random constants",TRUE,-5355.68,35,10928.9,TRUE,4,"Relative function convergence",TRUE,341.2
+"SwissRoute","M1","independent, fixed constants",TRUE,-1448.96,9,2951.6,NA,4,"Relative function convergence",TRUE,4.5
+"SwissRoute","M2","correlated, fixed constants",TRUE,-1431.98,15,2953.4,TRUE,4,"Relative function convergence",TRUE,12
+"SwissRoute","M3","independent, random constants",TRUE,-1444.42,10,2948.5,NA,4,"Relative function convergence",TRUE,5.2
+"SwissRoute","M4","correlated, random constants",TRUE,-1425.71,20,2970.6,TRUE,4,"Relative function convergence",TRUE,23.1
+"Electricity","M1","independent, fixed constants",TRUE,-3737.05,15,7561.9,NA,4,"Relative function convergence",TRUE,24
+"Electricity","M2","correlated, fixed constants",TRUE,-3567.68,30,7310.9,TRUE,4,"Relative function convergence",TRUE,91.7
+"Electricity","M3","independent, random constants",TRUE,-3727.56,18,7560.5,NA,4,"Relative function convergence",TRUE,21
+"Electricity","M4","correlated, random constants",TRUE,-3545.48,54,7407,TRUE,4,"Relative function convergence",TRUE,205.9
+"Vittel","M1","independent, fixed constants",TRUE,-6125.55,18,12374.1,NA,4,"Relative function convergence",TRUE,393.1
+"Vittel","M2","correlated, fixed constants",TRUE,-6070.45,46,12455.3,TRUE,4,"Relative function convergence",TRUE,413
+"Vittel","M3","independent, random constants",TRUE,-5858.58,20,11853.9,NA,4,"Relative function convergence",TRUE,46.8
+"Vittel","M4","correlated, random constants",TRUE,-5810.8,65,12065.9,TRUE,4,"Relative function convergence",TRUE,450.9

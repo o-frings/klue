@@ -1,0 +1,59 @@
+Recorded 2026-10-07 by dev/record_versions.R
+
+R version 4.3.1 (2023-06-16)
+Platform: aarch64-apple-darwin20 (64-bit)
+Running under: macOS 26.6.2
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+
+locale:
+[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+
+time zone: Europe/Paris
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] klue_0.10.0    testthat_3.1.9
+
+loaded via a namespace (and not attached):
+  [1] Rdpack_2.4           mnormt_2.1.1         gmnl_1.1-3.2        
+  [4] sandwich_3.0-2       rlang_1.1.1          magrittr_2.0.3      
+  [7] multcomp_1.4-25      matrixStats_1.0.0    compiler_4.3.1      
+ [10] mgcv_1.8-42          vctrs_0.6.5          quantreg_5.95       
+ [13] stringr_1.5.0        idefix_1.1.0         pkgconfig_2.0.3     
+ [16] shape_1.4.6          fastmap_1.1.1        backports_1.5.0     
+ [19] mcmc_0.9-7           ellipsis_0.3.2       utf8_1.2.3          
+ [22] promises_1.2.0.1     nloptr_2.0.3         miscTools_0.6-28    
+ [25] MatrixModels_0.5-1   purrr_1.0.4          glmnet_4.1-8        
+ [28] jomo_2.7-6           logistf_1.26.1       mlogit_1.0-3.1      
+ [31] apollo_0.3.5         later_1.3.1          pan_1.9             
+ [34] broom_1.0.5          parallel_4.3.1       cluster_2.1.4       
+ [37] R6_2.5.1             stringi_1.7.12       Rsolnp_1.16         
+ [40] boot_1.3-28.1        pkgload_1.3.2        rpart_4.1.19        
+ [43] estimability_1.4.1   brio_1.1.3           lmtest_0.9-40       
+ [46] numDeriv_2016.8-1.1  Rcpp_1.0.10          iterators_1.0.14    
+ [49] zoo_1.8-12           httpuv_1.6.11        rngWELL_0.10-9      
+ [52] Matrix_1.5-4.1       splines_4.3.1        nnet_7.3-19         
+ [55] tidyselect_1.2.0     rstudioapi_0.14      maxLik_1.5-2        
+ [58] codetools_0.2-19     lattice_0.21-8       tibble_3.2.1        
+ [61] shiny_1.7.4          withr_2.5.0          coda_0.19-4         
+ [64] RSGHB_1.2.2          desc_1.4.2           survival_3.5-5      
+ [67] mclust_6.1.1         pillar_1.9.0         mice_3.16.0         
+ [70] foreach_1.5.2        shinyjs_2.1.0        generics_0.1.3      
+ [73] rprojroot_2.0.3      truncnorm_1.0-9      randtoolbox_2.0.4   
+ [76] minqa_1.2.5          xtable_1.8-4         glue_1.6.2          
+ [79] emmeans_1.8.7        tools_4.3.1          tableHTML_2.1.2     
+ [82] lme4_1.1-34          SparseM_1.81         mvtnorm_1.2-2       
+ [85] grid_4.3.1           plotrix_3.8-2        tidyr_1.3.0         
+ [88] MCMCpack_1.6-3       rbibutils_2.2.13     nlme_3.1-162        
+ [91] formula.tools_1.7.1  Formula_1.2-5        cli_3.6.1           
+ [94] fansi_1.0.4          expm_0.999-7         dplyr_1.1.4         
+ [97] digest_0.6.31        bgw_0.1.3            operator.tools_1.6.3
+[100] TH.data_1.1-2        msm_1.7              htmltools_0.5.5     
+[103] lifecycle_1.0.3      mitml_0.4-5          statmod_1.5.0       
+[106] mime_0.12            MASS_7.3-60         

@@ -1,0 +1,26 @@
+library(mlogit); library(apollo)
+
+cat("=== mlogit::Electricity ===\n")
+data(Electricity, package = "mlogit")
+cat("rows:", nrow(Electricity), "  cols:", ncol(Electricity), "\n")
+cat("names:", paste(names(Electricity), collapse = ", "), "\n")
+cat("Unique id:", length(unique(Electricity$id)), "\n")
+cat("Tasks per id range:", paste(range(table(Electricity$id)), collapse = "-"), "\n")
+print(head(Electricity, 3))
+
+cat("\n=== mlogit::Train ===\n")
+data(Train, package = "mlogit")
+cat("rows:", nrow(Train), "  cols:", ncol(Train), "\n")
+cat("names:", paste(names(Train), collapse = ", "), "\n")
+cat("Unique id:", length(unique(Train$id)), "\n")
+cat("Tasks per id range:", paste(range(table(Train$id)), collapse = "-"), "\n")
+print(head(Train, 3))
+
+cat("\n=== apollo_swissRouteChoiceData ===\n")
+data(apollo_swissRouteChoiceData, package = "apollo")
+sw <- apollo_swissRouteChoiceData
+cat("rows:", nrow(sw), "  cols:", ncol(sw), "\n")
+cat("names:", paste(names(sw), collapse = ", "), "\n")
+cat("Unique ID:", length(unique(sw$ID)), "\n")
+cat("Tasks per ID range:", paste(range(table(sw$ID)), collapse = "-"), "\n")
+print(head(sw, 3))

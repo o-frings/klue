@@ -1,0 +1,7 @@
+"fit","reference","role","converged","LL","k","BIC","start_used","apollo_code","n_iter","minutes","selected"
+"stage (pooled-MNL start)","car","benchmark candidate",TRUE,-3583.65314417166,10,7233.53365158283,"pooled_mnl",4,19,164.3,FALSE
+"klue 0.9.5 fit","car","superseded (log-sd); reference point",TRUE,-3564.89537584067,10,7196.01811492084,NA,NA,NA,46.4,FALSE
+"from_old","car","benchmark candidate",TRUE,-3564.89537584067,10,7196.01811492084,"warm_start",4,1,35,FALSE
+"zero","car","benchmark candidate",TRUE,-3564.41519138977,10,7195.05774601904,"zero",4,24,55.2,TRUE
+"ref_train","train","sensitivity",TRUE,-3545.27612000973,10,7156.77960325896,"pooled_mnl",4,26,52.7,FALSE
+"ref_sm","Swissmetro","sensitivity",TRUE,-3549.45903774911,10,7165.14543873772,"pooled_mnl",4,36,42.4,FALSE

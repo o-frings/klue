@@ -1,0 +1,18 @@
+=== INITIALISATION ABLATION RESULTS ===
+
+Conditions evaluated: 36 
+
+Overall:
+  RP contrasts reach global:    94.4% (34/36)
+  One-hot indicators at global: 94.4% (34/36)
+  Random starts at global:      10.7% per start
+
+By true K:
+ K rp_at_global oh_at_global random_pct_global
+ 3       1.0000       1.0000           0.18833
+ 4       0.9167       1.0000           0.10333
+ 5       0.9167       0.8333           0.02833
+
+Log-likelihood gap (RP minus one-hot), per condition:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+-0.1814  0.0000  0.0000  0.0438  0.0000  1.7591 
