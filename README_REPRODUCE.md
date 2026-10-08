@@ -462,9 +462,8 @@ now carry a `_std` suffix).
 
 | Script | What it does |
 |--------|--------------|
-| `dev/sync_public.sh` | Mirrors this tree into `klue_public/` (the github.com/o-frings/klue clone): the package into `klue/`, the reproduction materials at the root. Never commits or pushes. `--dry-run` to preview. |
 | `dev/make_reproduction_archive.sh` | Builds `klue-reproduction-v<version>.zip` (code, result files, figures, `renv.lock`, `CITATION.cff`, the licence and the exact package tarball) for the GitHub release and the Zenodo deposit. The archive holds the package as `klue_<version>.tar.gz`: run `tar xzf klue_<version>.tar.gz` in its root first, which creates the `klue/` tree every script loads. |
-| `dev/publish_filter.zsh` | The rule both scripts use for `output/`: which top-level files are published (not run logs other than the two stress-ladder logs, resume part-files, development cross-checks, revision bookkeeping, or `output/vittel_respec_lcmnl.rds`, whose fit objects carry each Vittel respondent's class posteriors; its table is published as `output/vittel_respec_lcmnl.csv`) and which subfolders (`mmnl_bench_std/`, `mmnl_bench/`). |
+| `dev/publish_filter.zsh` | The rule `dev/make_reproduction_archive.sh` uses for `output/`: which top-level files are published (not run logs other than the two stress-ladder logs, resume part-files, development cross-checks, revision bookkeeping, or `output/vittel_respec_lcmnl.rds`, whose fit objects carry each Vittel respondent's class posteriors; its table is published as `output/vittel_respec_lcmnl.csv`) and which subfolders (`mmnl_bench_std/`, `mmnl_bench/`). |
 
 The public repository keeps the package in `klue/`, so both
 `remotes::install_github("o-frings/klue", subdir = "klue")` and the r-universe

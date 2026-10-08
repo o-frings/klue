@@ -1,6 +1,5 @@
-# dev/publish_filter.zsh -- sourced by dev/sync_public.sh and
-# dev/make_reproduction_archive.sh, so the public repository and the archive
-# publish the same result files.
+# dev/publish_filter.zsh -- sourced by dev/make_reproduction_archive.sh: the
+# result files the archive publishes, the same set this repository tracks.
 #
 # keep_output <file name>: 0 = publish this top-level output/ file.
 #   not published:

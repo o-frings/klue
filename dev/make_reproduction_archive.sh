@@ -50,7 +50,7 @@ for d in $OUTPUT_SUBDIRS; do
 done
 cp fig_*.pdf renv.lock "$STAGE/"
 cp klue/CITATION.cff "$STAGE/"
-for l in klue_public/LICENSE klue/LICENSE; do
+for l in LICENSE klue/LICENSE; do
   [[ -f "$l" ]] && { cp "$l" "$STAGE/LICENSE"; break }
 done
 
