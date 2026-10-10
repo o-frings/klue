@@ -4,8 +4,8 @@ Your clue to K. An R package for specifying latent class multinomial logit
 (LCMNL) models, plus the full reproduction materials for the paper it
 implements:
 
-> Frings, O. (2026). *A Clustering-Initialised Specification Workflow for
-> Latent Class Choice Models*. Working paper.
+> Frings, O. (2026). *Classes or Continuum? A Pre-Registrable Specification
+> Rule for Latent Class Logit Models*. Working paper.
 
 ## Layout
 

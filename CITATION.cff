@@ -23,7 +23,7 @@ keywords:
   - Monte Carlo simulation
 preferred-citation:
   type: unpublished
-  title: "A Clustering-Initialised Specification Workflow for Latent Class Choice Models"
+  title: "Classes or Continuum? A Pre-Registrable Specification Rule for Latent Class Logit Models"
   authors:
     - family-names: Frings
       given-names: Oliver

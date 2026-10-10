@@ -1,7 +1,7 @@
 # Reproduction materials
 
-Code and result files for *A Clustering-Initialised Specification Workflow
-for Latent Class Choice Models* (Frings).
+Code and result files for *Classes or Continuum? A Pre-Registrable
+Specification Rule for Latent Class Logit Models* (Frings).
 
 Everything in the paper is produced by the **`klue`** R package (the estimation
 engine), the simulation-study drivers in **`studies/klue_studies.R`**, and the

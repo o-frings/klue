@@ -11,14 +11,14 @@ c(
   # 1. Methodology paper
   bibentry(
     bibtype     = "Unpublished",
-    title       = "A Clustering-Initialised Specification Workflow for Latent Class Choice Models",
+    title       = "Classes or Continuum? A Pre-Registrable Specification Rule for Latent Class Logit Models",
     author      = person("Oliver", "Frings"),
     year        = 2026,
     note        = "Working paper",
     textVersion =
       paste("Frings, O. (2026).",
-            "A Clustering-Initialised Specification Workflow for",
-            "Latent Class Choice Models.",
+            "Classes or Continuum? A Pre-Registrable Specification",
+            "Rule for Latent Class Logit Models.",
             "Working paper.")
   ),
   # 2. Software citation (version auto-updates from meta$Version)

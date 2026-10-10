@@ -1,3 +1,9 @@
+# klue (development version)
+
+- The citation of the methodology paper (`citation("klue")`, `CITATION.cff` and
+  the message printed by `klue()`) uses its new title, *Classes or Continuum? A
+  Pre-Registrable Specification Rule for Latent Class Logit Models*.
+
 # klue 0.10.0 (2026-09-29)
 
 `klue_mmnl()` now estimates the mixed logit the way Apollo's own example

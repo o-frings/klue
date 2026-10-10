@@ -2,8 +2,8 @@
 
 Your clue to K. A reusable workflow for specifying latent class multinomial
 logit (LCMNL) models. Implements the hybrid ML / random-utility framework
-from Frings (2026), *A Clustering-Initialised Specification Workflow for
-Latent Class Choice Models*.
+from Frings (2026), *Classes or Continuum? A Pre-Registrable Specification
+Rule for Latent Class Logit Models*.
 
 ---
 
@@ -167,8 +167,8 @@ bit-exactly through this workflow against hand-coded baselines. See
 If you use klue in published work, please cite **the methodology paper,
 the software itself, and the upstream packages it builds on**:
 
-- Frings, O. (2026). *A Clustering-Initialised Specification Workflow for
-  Latent Class Choice Models*. Working paper.
+- Frings, O. (2026). *Classes or Continuum? A Pre-Registrable Specification
+  Rule for Latent Class Logit Models*. Working paper.
 - Frings, O. (2026). *klue: Hybrid Machine Learning and Random-Utility
   Workflow for Latent Class Multinomial Logit Model Specification*.
   R package. https://github.com/o-frings/klue

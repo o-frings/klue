@@ -235,8 +235,8 @@ klue <- function(database = NULL,
       pkg_ver <- tryCatch(as.character(utils::packageVersion("klue")),
                           error = function(e) "dev")
       cat("\n--- Please cite klue if you use it in published work ---\n")
-      cat("  Frings (2026). A Clustering-Initialised Specification Workflow\n")
-      cat("    for Latent Class Choice Models. Working paper.\n")
+      cat("  Frings (2026). Classes or Continuum? A Pre-Registrable Specification\n")
+      cat("    Rule for Latent Class Logit Models. Working paper.\n")
       cat(sprintf("  Frings (2026). klue: R package version %s.\n", pkg_ver))
       cat("    https://github.com/o-frings/klue\n")
       cat("\n  Plus the upstream packages: apollo (Hess & Palma 2019),\n")
