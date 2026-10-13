@@ -1,9 +1,3 @@
-# klue (development version)
-
-- The citation of the methodology paper (`citation("klue")`, `CITATION.cff` and
-  the message printed by `klue()`) uses its new title, *Classes or Continuum? A
-  Pre-Registrable Specification Rule for Latent Class Logit Models*.
-
 # klue 0.10.0 (2026-09-29)
 
 `klue_mmnl()` now estimates the mixed logit the way Apollo's own example
@@ -12,6 +6,10 @@ and reproduces hand-written scripts in that form to machine precision (same
 log-likelihood, estimates and robust standard errors to about 1e-10, same
 convergence code and iteration count). MMNL results change; refit anything
 estimated with 0.9.x.
+
+- The citation of the methodology paper (`citation("klue")`, `CITATION.cff` and
+  the message printed by `klue()`) uses its title, *Classes or Continuum? A
+  Pre-Registrable Specification Rule for Latent Class Logit Models*.
 
 - Random coefficients are `mu_p + sigma_p * draws_p` with `sigma_p`
   unconstrained, as in Apollo's examples; `sigma_p` is the standard deviation
