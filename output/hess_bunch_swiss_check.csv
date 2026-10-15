@@ -1,0 +1,8 @@
+"run","start","converged","LL","k","gap_to_hess_bunch"
+"full_precision","kmeans",TRUE,-1564.53526063787,9,-12.0052606378686
+"full_precision","gmm",TRUE,-1607.15474598531,9,-54.6247459853059
+"full_precision","hc_ward",TRUE,-1564.53526062171,9,-12.0052606217116
+"full_precision","hc_complete",TRUE,-1564.53526069866,9,-12.0052606986558
+"full_precision","hc_average",TRUE,-1552.53363496177,9,-0.00363496177260458
+"full_precision","pam",TRUE,-1564.53526062756,9,-12.0052606275556
+"default_screened","hc_average",TRUE,-1552.53363496182,9,-0.00363496182376366
