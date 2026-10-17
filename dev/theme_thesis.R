@@ -1,5 +1,5 @@
 # ============================================================================ #
-#   THEME_THESIS.R — Shared figure style of the thesis (Chapters 1-4):         #
+#   THEME_THESIS.R — Shared figure style of the thesis (Chapters 1-3):         #
 #   page widths, type sizes, greys, palettes, the ggplot2 themes               #
 #   theme_thesis() and theme_thesis_map(), the colour scales and the save      #
 #   helper. The rules behind it are in STYLE.md.                               #
@@ -10,7 +10,7 @@
 #   canonical copy only, then run sync.sh.                                     #
 # ============================================================================ #
 
-THESIS_STYLE_VERSION <- "1 (2026-10-17)"
+THESIS_STYLE_VERSION <- "1.2 (2026-10-17)"
 
 suppressPackageStartupMessages(library(ggplot2))
 
@@ -44,7 +44,8 @@ GREY_FILL  <- "#5D6D7E"   # bars and points of a single series
 
 # ---- Colour ----------------------------------------------------------------------
 # One main contrast pair for the thesis. Each chapter gives it one meaning and
-# keeps that meaning in every figure (STYLE.md lists them).
+# keeps that meaning in every figure (STYLE.md lists them); no other scale
+# uses blue or red.
 
 BLUE <- "#2C7FB8"
 RED  <- "#C0392B"
@@ -56,19 +57,22 @@ RED  <- "#C0392B"
 PAL_CAT <- c(blue = BLUE, red = RED, purple = "#4A3AA7",
              green = "#1B9E77", orange = "#E08214")
 
-# Ordinal ramp in slate, dark to light (e.g. k = 2, 4, 5). Its two ends are
-# the neutral pair for a grouping that must not look like the main pair.
+# Ordinal ramp in slate, dark to light (e.g. k = 2, 4, 5)
 PAL_ORDINAL <- c("#1D3C47", "#4D7A8A", "#93B5C2")
-PAL_PAIR_NEUTRAL <- c("#1D3C47", "#6F95A6")
 
-# Diverging: negative red, zero light grey, positive blue
+# Diverging: negative orange, zero light grey, positive purple. Both ends
+# pass the colour-vision checks against blue and red, so a diverging scale
+# never reads as the main pair. White text only on the purple end (orange
+# has 2.8:1 contrast with white).
+DIV_NEG <- PAL_CAT[["orange"]]
 DIV_MID <- "#F2F2F2"
+DIV_POS <- PAL_CAT[["purple"]]
 
-# Sequential: light grey to one colour of the main pair
-pal_sequential <- function(n, to = RED) colorRampPalette(c("#E6E6E6", to))(n)
+# Sequential: light grey to dark slate
+pal_sequential <- function(n, to = "#1D3C47") colorRampPalette(c("#E6E6E6", to))(n)
 
 scale_fill_diverging <- function(..., limits = c(-1, 1)) {
-  scale_fill_gradient2(low = RED, mid = DIV_MID, high = BLUE, midpoint = 0,
+  scale_fill_gradient2(low = DIV_NEG, mid = DIV_MID, high = DIV_POS, midpoint = 0,
                        limits = limits, ...)
 }
 
