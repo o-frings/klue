@@ -18,7 +18,7 @@
 #   x5  Hedgesconservation                (hedges     ref = Hedgesremoval)
 #   x6  Hedgesplantation                  (hedges     ref = Hedgesremoval)
 #   x7  Forest_Management_For_Water       (forest     ref = For_Biodiv)
-#   price = Waterbill (per month, scaled to per 10 for numerical stability)
+#   price = Waterbill (increase in the annual water bill, EUR 1-55; scaled to per 10 for numerical stability)
 #
 # IDENTIFICATION (found 2026-09-21). The forest attribute has exactly two levels
 # and every policy alternative carries one of them, so the two indicators sum to
