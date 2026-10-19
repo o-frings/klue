@@ -140,7 +140,8 @@ some file and function names retain the historical `orthogonal` label.
 | IC performance / K×κ, `tab:overall`, `tab:K_kappa` | `klue_study_main()` | `output/main_results.csv` |
 | LCMNL vs MMNL (H4), `tab:mmnl` | `klue_study_mmnl()` | `output/mmnl_results.csv` |
 | Recovery / ARI, `tab:recovery`, `tab:ari` | `klue_study_main()` | `output/main_results.csv` |
-| Robustness, `tab:unbalanced`/`design`/`concomitant`/`sample_sens` | `klue_study_unbalanced/design/concomitant/sample()` | `output/*_results.csv` |
+| Robustness, `tab:unbalanced`/`concomitant`/`sample_sens` | `klue_study_unbalanced/concomitant/sample()` | `output/*_results.csv` |
+| Continuous vs discrete attribute levels, `tab:design` | `dev/run_design_discrete.R` (`klue_study_design()`; since 2026-10-19 its discrete arm is `klue_simulate_discrete()`, independent draws from five levels, replacing the cyclic grid of `klue_simulate_deff()`, whose price was collinear with the quality levels before jitter) | `output/design_results.csv` (one row per condition) |
 | Correlated MMNL, `tab:mmnl_corr` | `klue_study_mmnl_corr()` | `output/mmnl_correlated_results.csv` |
 
 **Simulation, blocked D-efficient (realistic) design** — `blocked = TRUE`
@@ -224,9 +225,9 @@ Gate 1 diagnostic done: `dev/run_apollo_smartstart.R` →
 `output/apollo_smartstart_diag.csv` (rescaling does not rescue Apollo's
 non-default `smartStart=TRUE`; the ladders now run `apollo_searchStart` at its
 defaults). Minor 7
-(full-grid k1 MMNL) done → `output/k1_mmnl_blocked_full.csv`. Still to run (need a
-compute window and the pinned-`mlogit`+`gmnl` side-library): the proper-`idefix`
-`tab:design` rerun (Minor 9). The randomised package stress ladder (5 seeds per rung)
+(full-grid k1 MMNL) done → `output/k1_mmnl_blocked_full.csv`. The `tab:design` rerun
+(Minor 9) ran on 2026-10-19 with independent discrete levels in place of an `idefix`
+design (`dev/run_design_discrete.R`). The randomised package stress ladder (5 seeds per rung)
 (`dev/stress_replicate.R`, Minor 6) has since run; see "Standard-Apollo reruns".
 
 ## Standard-Apollo reruns (klue 0.10.0)

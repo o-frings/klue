@@ -335,11 +335,11 @@ cat("  Need per-condition data for CIs.\n")
 # =============================================================================
 # 12. SUPPLEMENTARY: Design (Table 12)
 # =============================================================================
-cat("\n--- TABLE 12: Design type ---\n\n")
+cat("\n--- TABLE 12: Continuous vs discrete attribute levels ---\n\n")
 
-design <- read.csv(file.path(OUTPUT_DIR, "design_results.csv"))
-cat(sprintf("  Random: %.1f%%, D-efficient: %.1f%%\n",
-            design$random, design$deff))
+design <- read.csv(file.path(OUTPUT_DIR, "design_results.csv"))   # one row per condition (since 2026-10-19)
+cat(sprintf("  Continuous levels: %.1f%%, discrete levels: %.1f%% (n = %d)\n",
+            100 * mean(design$ok_random), 100 * mean(design$ok_discrete), nrow(design)))
 
 # =============================================================================
 # 13. SUPPLEMENTARY: Concomitant (Table 13)

@@ -36,7 +36,11 @@ for (nm in c(".klue_cores", "get_all_starts", "get_mnl_perturbation_starts", "ge
 
 #' Legacy grid-with-jitter design (deprecated)
 #'
-#' Kept only so klue_study_design() and old scripts reproduce 0.6.x output.
+#' Kept only so old scripts reproduce 0.6.x output; klue_study_design() uses
+#' klue_simulate_discrete() since 2026-10-19. The cyclic rule puts the five
+#' attributes of an alternative on five consecutive level indices, so before the
+#' jitter the price level is 0.5 - 0.375 * (sum of the quality levels) and only
+#' the jitter identifies the price coefficient.
 #' This is NOT a D-optimal design (fixed level grid + jitter); use
 #' \code{klue_design()} + the \code{design} argument of \code{klue_simulate}.
 #'
@@ -97,6 +101,39 @@ klue_simulate_deff <- function(N_per_class = 150, T_tasks = 20, true_K = 2,
   list(database = database, true_betas = true_betas, true_class = true_class,
        individual_betas = individual_betas, N = N, T = T_tasks, K = true_K,
        dgp = dgp)
+}
+
+#' Randomised design with discrete attribute levels
+#'
+#' Same respondents, classes and individual coefficients as
+#' \code{klue_simulate()} under the same seed; only the attribute levels
+#' differ. Each quality attribute and the price of every alternative, task and
+#' respondent is drawn independently and uniformly from five equally spaced
+#' levels (quality -0.8 to 0.8, price 0.2 to 0.8), with no jitter, so the
+#' levels are discrete and uncorrelated in expectation. Choices are then
+#' simulated anew from these levels.
+#'
+#' @inheritParams klue_simulate_deff
+#' @return The list returned by \code{klue_simulate()}, with the attribute
+#'   columns and \code{CHOICE} of \code{database} replaced.
+klue_simulate_discrete <- function(N_per_class = 150, T_tasks = 20, true_K = 2,
+                                   separation = 1.0, heterogeneity = 0.25,
+                                   seed = 12345, dgp = DGP_DEFAULT) {
+  sim <- klue_simulate(N_per_class = N_per_class, T_tasks = T_tasks,
+                       true_K = true_K, separation = separation,
+                       heterogeneity = heterogeneity, seed = seed, dgp = dgp)
+  # The RNG stream continues from klue_simulate(seed), so the levels are
+  # deterministic given the seed.
+  db <- sim$database; n_obs <- nrow(db)
+  lvl_c <- c(-0.8, -0.4, 0.0, 0.4, 0.8)
+  lvl_p <- c(0.2, 0.35, 0.5, 0.65, 0.8)
+  for (j in 1:dgp$n_alternatives) {
+    for (a in 1:dgp$n_generic)
+      db[[paste0("x", a, "_", j)]] <- sample(lvl_c, n_obs, replace = TRUE)
+    db[[paste0("price_", j)]] <- sample(lvl_p, n_obs, replace = TRUE)
+  }
+  sim$database <- .simulate_choices(db, sim$individual_betas, dgp)
+  sim
 }
 
 # Monte Carlo study drivers reproducing Frings (2026). All drivers share the
@@ -789,20 +826,25 @@ klue_study_unbalanced <- function(verbose = TRUE, dgp = DGP_DEFAULT,
              accuracy = accs)
 }
 
-#' Monte Carlo: random vs D-efficient experimental design
+#' Monte Carlo: continuous vs discrete attribute levels
 #'
-#' Compares BIC class-count recovery on data generated with a random-attribute
-#' design against data generated with a D-efficient design, holding the DGP
-#' otherwise fixed.
+#' Compares BIC class-count recovery on data with continuous random attribute
+#' levels (\code{klue_simulate()}) against data with discrete random levels
+#' (\code{klue_simulate_discrete()}), with the same respondents and
+#' coefficients in each pair. Until 2026-10-19 the discrete arm used the
+#' cyclic grid of \code{klue_simulate_deff()}, whose price levels are collinear
+#' with the quality levels before jitter.
 #'
 #' @param verbose if \code{TRUE}, print recovery rates for each design.
 #' @param dgp data-generating-process specification.
 #' @param n_cores cores for condition-level parallelism.
-#' @return A data.frame with one row: the BIC class-count recovery accuracy
-#'   (percent) for the random design and for the D-efficient design.
+#' @return A data.frame with one row per condition: \code{true_K},
+#'   \code{kappa}, \code{rep}, \code{seed}, and the BIC-selected number of
+#'   classes and correctness for each arm (\code{C_random}, \code{ok_random},
+#'   \code{C_discrete}, \code{ok_discrete}).
 klue_study_design <- function(verbose = TRUE, dgp = DGP_DEFAULT,
                               n_cores = .klue_cores()) {
-  if (verbose) cat("\n==== SUPP 4: D-EFFICIENT ====\n")
+  if (verbose) cat("\n==== SUPP 4: CONTINUOUS VS DISCRETE LEVELS ====\n")
   conds <- expand.grid(true_K = c(2, 3), kappa = c(0.75, 1.0), rep = 1:5)
 
   .run_one <- function(i) {
@@ -811,18 +853,23 @@ klue_study_design <- function(verbose = TRUE, dgp = DGP_DEFAULT,
     dr <- klue_simulate(N_per_class = 150, T_tasks = 20, true_K = tK,
                         separation = kap, heterogeneity = 0.2, seed = seed,
                         dgp = dgp)
-    dd <- klue_simulate_deff(N_per_class = 150, T_tasks = 20, true_K = tK,
-                             separation = kap, heterogeneity = 0.2, seed = seed,
-                             dgp = dgp)
-    list(r_ok = as.integer(which.min(.bic_scan(dr$database, 1:5, dgp)) == tK),
-         d_ok = as.integer(which.min(.bic_scan(dd$database, 1:5, dgp)) == tK))
+    dd <- klue_simulate_discrete(N_per_class = 150, T_tasks = 20, true_K = tK,
+                                 separation = kap, heterogeneity = 0.2, seed = seed,
+                                 dgp = dgp)
+    c_r <- as.integer(which.min(.bic_scan(dr$database, 1:5, dgp)))
+    c_d <- as.integer(which.min(.bic_scan(dd$database, 1:5, dgp)))
+    list(seed = seed, C_random = c_r, ok_random = as.integer(c_r == tK),
+         C_discrete = c_d, ok_discrete = as.integer(c_d == tK))
   }
 
   res_list <- .study_mclapply(nrow(conds), .run_one, n_cores)
-  rok <- sum(.col(res_list, "r_ok")); dok <- sum(.col(res_list, "d_ok"))
-  if (verbose) cat(sprintf("  Random: %.1f%%  D-eff: %.1f%%\n",
-                           100 * rok / nrow(conds), 100 * dok / nrow(conds)))
-  data.frame(random = 100 * rok / nrow(conds), deff = 100 * dok / nrow(conds))
+  out <- data.frame(true_K = conds$true_K, kappa = conds$kappa, rep = conds$rep,
+                    seed = .col(res_list, "seed"),
+                    C_random = .col(res_list, "C_random"), ok_random = .col(res_list, "ok_random"),
+                    C_discrete = .col(res_list, "C_discrete"), ok_discrete = .col(res_list, "ok_discrete"))
+  if (verbose) cat(sprintf("  Continuous: %.1f%%  Discrete: %.1f%%\n",
+                           100 * mean(out$ok_random), 100 * mean(out$ok_discrete)))
+  out
 }
 
 #' Monte Carlo: concomitant covariates on class membership

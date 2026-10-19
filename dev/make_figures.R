@@ -93,12 +93,12 @@ cic <- c("black","#d95f0e","#2c7fb8"); lic <- c(1,4,2); pic <- c(19,15,17)
 new_fig("fig_ic.pdf", width = LW, height = H_PANEL)
 par(mfrow = c(1,2), mar = c(4.0, 4.0, 2.2, 0.8))
 matplot(K, icK, type="n", xaxt="n", ylim=c(0,100),
-        xlab=expression("number of classes "*K^"*"), ylab="correct enumeration (%)", main="(a) by number of classes")
+        xlab=expression("number of classes "*K^"*"), ylab="selection accuracy (%)", main="(a) by number of classes")
 GRID(seq(0, 100, 20))
 matlines(K, icK, type="b", lwd=2, col=cic, lty=lic, pch=pic)
 axis(1,at=K); legend("right", c("BIC","AIC","ICL"), col=cic, lty=lic, pch=pic, lwd=2, bty="n", cex=LEG_CEX)
 matplot(kap, icK2, type="n", xaxt="n", ylim=c(0,100),
-        xlab=expression("inter-class separation "*kappa), ylab="correct enumeration (%)",
+        xlab=expression("separation "*kappa), ylab="selection accuracy (%)",
         main=expression("(b) by separation ("*K^"*">=2*")"))
 GRID(seq(0, 100, 20))
 matlines(kap, icK2, type="b", lwd=2, col=cic, lty=lic, pch=pic)
@@ -126,14 +126,14 @@ matlines(3:5, ya, type="b", lwd=2, col=col[1:4], lty=lty[1:4], pch=pch[1:4])
 axis(1,at=3:5)
 par(mar = c(4.0, 4.0, 2.2, 0.8))
 plot(NA, xlim = c(0.75, 3.25), ylim = c(0, 100), xaxt = "n",
-     xlab = "data difficulty", ylab = "seeds within 0.5 LL of best (%)", main = "(b) Package head-to-head")
+     xlab = "rung of the stress ladder", ylab = "seeds within 0.5 LL of best (%)", main = "(b) Packages' own routines")
 GRID(seq(0, 100, 20))
 for (i in seq_len(nrow(ARMS))) {
   k <- ARMS$slot[i]
   lines(1:3 + DODGE[i], relB[, i], type = "b", lwd = 2, col = col[k], lty = lty[k], pch = pch[k])
 }
 axis(1, at = 1:3, labels = gsub("_", " ", rungs))
-legend_strip(c("clustering", "random-partition", "pooled-MNL perturbation", "diffuse random"), 1:4)
+legend_strip(c("clustering", "random-partition", "pooled-MNL perturbation", "uninformed random"), 1:4)
 legend_strip(ARMS$lab, ARMS$slot)
 dev.off()
 
@@ -149,7 +149,7 @@ YT <- c(1, 3, 10, 30, 100, 300, 1000, 3000, 10000)
 new_fig("fig_time.pdf", width = 0.62 * LW, height = 3.20 + H_LEG)
 layout(matrix(1:2, ncol = 1), heights = c(3.20, H_LEG))
 par(mar = c(4.0, 5.3, 1.2, 0.8))
-plot(NA, log = "y", xaxt = "n", yaxt = "n", xlab = "data difficulty", ylab = "",
+plot(NA, log = "y", xaxt = "n", yaxt = "n", xlab = "rung of the stress ladder", ylab = "",
      ylim = c(1, 1e4), xlim = c(0.75, 3.25))
 GRID(YT)
 for (i in seq_len(nrow(ARMS))) {
