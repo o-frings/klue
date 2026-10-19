@@ -149,7 +149,7 @@ some file and function names retain the historical `orthogonal` label.
 | Table | Produced by | Result file |
 |-------|-------------|-------------|
 | Enumeration K×κ, `tab:K_kappa_blocked` | `dev/run_blocked_baseline.R` (`klue_study_main(blocked=TRUE, n_reps=20)`) | `output/main_blocked.csv` |
-| AIC3 accuracy bounds (text, Section 3.2; both designs) | `dev/aic3_bound.R` (deterministic; reads `output/main_blocked.csv` and `output/main_results.csv`) | `output/aic3_bound.csv` |
+| AIC3 accuracy bounds (text, Section 3.2; both designs) and the BIC-ICL disagreement counts (pre-registration appendix, provision iv) | `dev/aic3_bound.R` (deterministic; reads `output/main_blocked.csv` and `output/main_results.csv`) | `output/aic3_bound.csv` |
 | Convergence/init (H1/H1a) | `dev/run_blocked_baseline.R` | `output/{convergence,init_ablation}_blocked.csv` |
 | Estimator × start (H1b), `tab:est_start_blocked` | `dev/run_estimator_blocked.R` (`klue_study_estimator(blocked=TRUE)`) | `output/estimator_blocked.csv` |
 | Package stress ladder, `tab:stress_blocked` | `dev/stress_replicate_blocked.R` (klue ML/EM, `lclogit`-style EM+random-partition, Apollo `searchStart` at defaults, `apollo_lcEM`, Apollo from the clustering starts, gmnl; Apollo's reduced search, the non-default arm version12 reported, is kept as `apollo_ss_published` and runs through the same runner; `dev/rerun_apollo_blocked.R`, which first wrote it, is superseded and stops) | `output/stress_replicate_blocked.rds` |

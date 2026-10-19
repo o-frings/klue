@@ -17,6 +17,10 @@
 # is certainly correct where C_BIC = C_AIC = K* (lower bound), and
 # over-selects wherever BIC does.
 #
+# The script also counts the conditions where BIC and ICL disagree, and which of
+# the two is right there (pre-registration appendix, provision iv): ICL adds
+# 2H >= 0 to BIC, so it never selects more classes than BIC.
+#
 # Inputs: output/main_blocked.csv (1,680 blocked conditions) and
 #   output/main_results.csv (420 randomised conditions).
 # Writes: output/aic3_bound.csv. Deterministic; no random numbers.
@@ -36,7 +40,11 @@ bound_one <- function(file, design) {
     aic3_correct_upper = mean(b <= K & K <= a),
     bic_over = mean(b > K),                 # AIC3 over-selects at least here
     k1_bic_over = mean(b[K == 1] > 1),      # continuous K* = 1 conditions
-    k1_n = sum(K == 1))
+    k1_n = sum(K == 1),
+    icl_above_bic = sum(d$selected_icl > b),    # 0: ICL never selects more classes
+    bic_icl_disagree = sum(d$selected_icl != b),
+    bic_right_when_disagree = sum(d$selected_icl != b & b == K),
+    icl_right_when_disagree = sum(d$selected_icl != b & d$selected_icl == K))
 }
 
 out <- rbind(bound_one("main_blocked.csv", "blocked"),
