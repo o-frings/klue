@@ -18,8 +18,10 @@
 # over-selects wherever BIC does.
 #
 # The script also counts the conditions where BIC and ICL disagree, and which of
-# the two is right there (pre-registration appendix, provision iv): ICL adds
-# 2H >= 0 to BIC, so it never selects more classes than BIC.
+# the two is right there (pre-registration appendix, provision iv), and the
+# conditions in which ICL selects more classes than BIC. Nothing forces that count
+# to zero, because 2H can fall as C rises (on Rhin-Meuse ICL picks C = 8, BIC
+# C = 7); in both simulation designs it is zero.
 #
 # Inputs: output/main_blocked.csv (1,680 blocked conditions) and
 #   output/main_results.csv (420 randomised conditions).
@@ -41,7 +43,7 @@ bound_one <- function(file, design) {
     bic_over = mean(b > K),                 # AIC3 over-selects at least here
     k1_bic_over = mean(b[K == 1] > 1),      # continuous K* = 1 conditions
     k1_n = sum(K == 1),
-    icl_above_bic = sum(d$selected_icl > b),    # 0: ICL never selects more classes
+    icl_above_bic = sum(d$selected_icl > b),    # 0 in both simulation designs
     bic_icl_disagree = sum(d$selected_icl != b),
     bic_right_when_disagree = sum(d$selected_icl != b & b == K),
     icl_right_when_disagree = sum(d$selected_icl != b & d$selected_icl == K))
