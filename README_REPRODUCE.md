@@ -134,8 +134,8 @@ some file and function names retain the historical `orthogonal` label.
 | Table | Produced by | Result file |
 |-------|-------------|-------------|
 | Convergence (H1), `tab:convergence` | `klue_study_convergence()` | `output/convergence_results.csv` |
-| Estimator × start (H1b), `tab:est_start` | `klue_study_estimator()` | `output/estimator_orthogonal.rds` |
-| Feature ablation (H1a), RP contrasts vs one-hot | `R/run_init_ablation.R` (`klue_study_initialisation()`) | `output/init_ablation.rds`, `output/init_ablation_summary.txt` |
+| Estimator × start (H1a), `tab:est_start` | `klue_study_estimator()` | `output/estimator_orthogonal.rds` |
+| Feature ablation (H1b), RP contrasts vs one-hot | `R/run_init_ablation.R` (`klue_study_initialisation()`) | `output/init_ablation.rds`, `output/init_ablation_summary.txt` |
 | Package stress ladder, `tab:stress` | `dev/stress_replicate.R` | `output/stress_replicate.rds` |
 | IC performance / K×κ, `tab:overall`, `tab:K_kappa` | `klue_study_main()` | `output/main_results.csv` |
 | LCMNL vs MMNL (H4), `tab:mmnl` | `klue_study_mmnl()` | `output/mmnl_results.csv` |
@@ -150,8 +150,8 @@ some file and function names retain the historical `orthogonal` label.
 |-------|-------------|-------------|
 | Enumeration K×κ, `tab:K_kappa_blocked` | `dev/run_blocked_baseline.R` (`klue_study_main(blocked=TRUE, n_reps=20)`) | `output/main_blocked.csv` |
 | AIC3 accuracy bounds (text, Section 3.2; both designs) and the BIC-ICL disagreement counts (pre-registration appendix, provision iv) | `dev/aic3_bound.R` (deterministic; reads `output/main_blocked.csv` and `output/main_results.csv`) | `output/aic3_bound.csv` |
-| Convergence/init (H1/H1a) | `dev/run_blocked_baseline.R` | `output/{convergence,init_ablation}_blocked.csv` |
-| Estimator × start (H1b), `tab:est_start_blocked` | `dev/run_estimator_blocked.R` (`klue_study_estimator(blocked=TRUE)`) | `output/estimator_blocked.csv` |
+| Convergence/init (H1/H1b) | `dev/run_blocked_baseline.R` | `output/{convergence,init_ablation}_blocked.csv` |
+| Estimator × start (H1a), `tab:est_start_blocked` | `dev/run_estimator_blocked.R` (`klue_study_estimator(blocked=TRUE)`) | `output/estimator_blocked.csv` |
 | Package stress ladder, `tab:stress_blocked` | `dev/stress_replicate_blocked.R` (klue ML/EM, `lclogit`-style EM+random-partition, Apollo `searchStart` at defaults, `apollo_lcEM`, Apollo from the clustering starts, gmnl; Apollo's reduced search, the non-default arm version12 reported, is kept as `apollo_ss_published` and runs through the same runner; `dev/rerun_apollo_blocked.R`, which first wrote it, is superseded and stops) | `output/stress_replicate_blocked.rds` |
 | H4 MMNL, `tab:mmnl_blocked` | `dev/run_k1_mmnl_blocked.R` (K*=1), `dev/run_discrete_mmnl_blocked.R` (K*>=2) | `output/k1_mmnl_blocked_full.csv`, `output/discrete_mmnl_blocked.csv` |
 | Robustness, `tab:robust_blocked` | `dev/run_robustness_blocked.R` | `output/{unbalanced,concomitant,sample}_blocked.csv` |
@@ -485,7 +485,7 @@ pkgload::load_all("klue")
 source("studies/klue_studies.R")
 options(klue.screen = FALSE)   # the pre-0.9.1 multistart behind the simulation tables (see "Package history")
 klue_study_main(blocked = TRUE, n_reps = 20)        # blocked enumeration baseline
-klue_study_estimator(blocked = TRUE)                # H1b initialisation benchmark
+klue_study_estimator(blocked = TRUE)                # H1a initialisation benchmark
 # Package head-to-head (needs apollo + gmnl + mlogit 1.0-3.1 in
 # ~/R/oldmlogit_lib, see Requirements; single-core):
 #   Rscript dev/stress_replicate_blocked.R
