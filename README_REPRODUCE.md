@@ -153,7 +153,7 @@ some file and function names retain the historical `orthogonal` label.
 | Convergence/init (H1/H1b) | `dev/run_blocked_baseline.R` | `output/{convergence,init_ablation}_blocked.csv` |
 | Estimator × start (H1a), `tab:est_start_blocked` | `dev/run_estimator_blocked.R` (`klue_study_estimator(blocked=TRUE)`) | `output/estimator_blocked.csv` |
 | Package stress ladder, `tab:stress_blocked` | `dev/stress_replicate_blocked.R` (klue ML/EM, `lclogit`-style EM+random-partition, Apollo `searchStart` at defaults, `apollo_lcEM`, Apollo from the clustering starts, gmnl; Apollo's reduced search, the non-default arm version12 reported, is kept as `apollo_ss_published` and runs through the same runner; `dev/rerun_apollo_blocked.R`, which first wrote it, is superseded and stops) | `output/stress_replicate_blocked.rds` |
-| H4 MMNL, `tab:mmnl_blocked` | `dev/run_k1_mmnl_blocked.R` (K*=1), `dev/run_discrete_mmnl_blocked.R` (K*>=2) | `output/k1_mmnl_blocked_full.csv`, `output/discrete_mmnl_blocked.csv` |
+| H4 MMNL, `tab:mmnl_blocked` | `dev/run_k1_mmnl_blocked.R` (K*=1), `dev/run_discrete_mmnl_blocked.R` (K*>=2; 64 cells since 2026-10-22, when K*=5 and kappa=0.50 were added to the original 36; resumable, same seeds) | `output/k1_mmnl_blocked_full.csv`, `output/discrete_mmnl_blocked.csv` |
 | Robustness, `tab:robust_blocked` | `dev/run_robustness_blocked.R` | `output/{unbalanced,concomitant,sample}_blocked.csv` |
 
 **Empirical applications** (Appendix): `R/empirical_*.R` → `output/*_lcmnl_results.csv`,

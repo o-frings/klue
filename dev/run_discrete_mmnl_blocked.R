@@ -1,9 +1,16 @@
 # dev/run_discrete_mmnl_blocked.R
-# Gap B: LCMNL-vs-MMNL on DISCRETE DGPs (K* in {2,3,4}) under the blocked
-# D-efficient baseline -- the realistic-design counterpart of the orthogonal
-# discrete result (tab:mmnl). Confirms LCMNL is preferred when heterogeneity is
-# genuinely discrete, under the realistic design. (The continuous K*=1 case is
-# already covered by run_k1_mmnl_blocked.R / tab:mmnl_blocked.)
+# Gap B: LCMNL-vs-MMNL on DISCRETE DGPs under the blocked D-efficient baseline
+# -- the realistic-design counterpart of the orthogonal discrete result
+# (tab:mmnl). Confirms LCMNL is preferred when heterogeneity is genuinely
+# discrete, under the realistic design. (The continuous K*=1 case is already
+# covered by run_k1_mmnl_blocked.R / tab:mmnl_blocked.)
+# Grid: K* in {2,3,4,5} x kappa in {0.50,0.75,1.00,1.25} x sigma in {0.15,0.25}
+# x 2 replications = 64 cells. The first run (3 Oct 2026) covered K* <= 4 and
+# kappa >= 0.75 (36 cells); K* = 5 and kappa = 0.50 were added on 22 Oct 2026 so
+# that the comparison also covers the cells where BIC selects the number of
+# classes least accurately (tab:K_kappa_blocked). The extension reuses the
+# seed formula below, so the first 36 cells are unchanged and the loop skips
+# them.
 #
 # Low-intensity: single core, single-thread BLAS, nice; MMNL via Apollo (n_cores=1
 # to avoid the detached-cluster deadlock). Resumable: skips (K,kappa,sigma,rep)
@@ -27,8 +34,8 @@ options(klue.cores = 1L)   # LCMNL side single-core (the old N_CORES_LCMNL names
 stamp <- function(m) { cat(sprintf("[%s] %s\n", format(Sys.time(), "%H:%M:%S"), m)); flush.console() }
 
 design <- klue_design(n_cards = 48L, n_blocks = 4L)
-conds <- expand.grid(true_K = c(2, 3, 4), kappa = c(0.75, 1.0, 1.25),
-                     sigma = c(0.15, 0.25), rep = 1:2)   # 36 discrete cells
+conds <- expand.grid(true_K = c(2, 3, 4, 5), kappa = c(0.50, 0.75, 1.0, 1.25),
+                     sigma = c(0.15, 0.25), rep = 1:2)   # 64 discrete cells
 done <- if (file.exists(CSV)) { d0 <- read.csv(CSV); paste(d0$true_K,d0$kappa,d0$sigma,d0$rep) } else character(0)
 rows <- if (file.exists(CSV)) read.csv(CSV) else NULL
 stamp(sprintf("Gap B: discrete LCMNL-vs-MMNL (blocked), %d cells, 1 core", nrow(conds)))
