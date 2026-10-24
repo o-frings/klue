@@ -3,7 +3,8 @@
 # =============================================================================
 #
 # Reads output/{main,mmnl,mmnl_correlated,recovery,convergence,unbalanced,
-# design,concomitant,sample_sensitivity}_results.csv and computes:
+# design,concomitant,sample_sensitivity}_results.csv and
+# output/convergence_blocked.csv, and computes:
 #   1. Wilson confidence intervals for all proportions
 #   2. McNemar test for BIC vs ICL (paired comparison)
 #   3. Logistic regression of BIC success on design factors
@@ -318,6 +319,24 @@ for (k in c(3, 4, 5)) {
 cat("\n  Wilcoxon signed-rank test (pct_global vs 50% baseline):\n")
 wt <- wilcox.test(conv$pct_global, mu = 0.5, alternative = "less")
 cat(sprintf("    V = %.0f, p = %.2e\n", wt$statistic, wt$p.value))
+
+# Blocked-design H1 run (output/convergence_blocked.csv, same columns as the
+# randomised run): the blocked block of the convergence table in the appendix.
+# "matched" = conditions in which one of the 50 uninformed starts reached the
+# clustering solution (match_at not NA); the median of match_at is the number
+# of starts needed.
+convb <- read.csv(file.path(OUTPUT_DIR, "convergence_blocked.csv"))
+cat("\n  Blocked design:\n")
+for (k in c(3, 4, 5, NA)) {
+  sub <- if (is.na(k)) convb else convb[convb$K == k, ]
+  ci_b <- boot_ci(sub$pct_global)
+  cat(sprintf("  %s: clustering at global %d/%d; random at global mean=%.1f%% [%.1f, %.1f]; 50 starts matched %d/%d; median starts to match %s\n",
+              if (is.na(k)) "Overall" else paste0("K=", k),
+              sum(sub$cluster_best), nrow(sub),
+              ci_b["estimate"] * 100, ci_b["lower"] * 100, ci_b["upper"] * 100,
+              sum(!is.na(sub$match_at)), nrow(sub),
+              if (is.na(k)) "---" else format(median(sub$match_at, na.rm = TRUE))))
+}
 
 # =============================================================================
 # 11. SUPPLEMENTARY: Unbalanced (Table 11)
